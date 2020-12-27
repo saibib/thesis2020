@@ -2,7 +2,7 @@ agg = function(X, wts, method = c('ar', 'geom')){
   X = as.matrix(X)
   method = match.arg(method)
   if (!is.numeric(X)) stop('Must pass a numeric matrix')
-  if (any(is.na(X))) message('Data has missing values')
+  if (any(is.na(X)) ) message('Data has missing values')
 
   if(method == 'ar') {
     tmp = X %*% diag(wts) # multiply by column weights
