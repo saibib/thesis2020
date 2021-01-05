@@ -1,6 +1,5 @@
-geom_agg = function(X,wts){
+geom_agg = function(X,wts=NULL){
   X = as.matrix(X)
-  method = match.arg(method)
   if (!is.numeric(X)) stop('Must pass a numeric matrix')
   if (any(is.na(X)) ) message('Data has missing values')
   if (is.null(wts)){

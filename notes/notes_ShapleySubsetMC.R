@@ -1,3 +1,5 @@
+
+## an example of the command call: The Sobol model with heterogeneous inputs
 Ni = 10
 weight = NULL
 noise = FALSE
@@ -18,6 +20,10 @@ X[(X[,6]>0 &X[,6]<1),6]=1
 cat=c(1,2) # we choose to take X1 and X2 as categorical variables (with the discrete distance)
 discrete=c(4,6) # we indicate that X4 and X6 can take several times the same value
 Y=sobol.fun(X)
+
+Shap=shapleySubsetMc(X=X,Y=Y, cat=cat, discrete=discrete,Ntot=20000, Ni=10)
+plot(Shap)
+
 
 {
   dimen = dim(X)
