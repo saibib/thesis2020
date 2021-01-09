@@ -11,6 +11,7 @@ agg = function(X, wts = NULL, method = c('ar', 'geom')){
     if (length(wts) != ncol(X)) stop('Mismatch between number of weights and predictors')
   }
 
+
   if(method == 'ar') {
     tmp = X %*% diag(wts) # multiply by column weights
     scores = apply(tmp, 1, function(x) sum(x, na.rm = T)) # row sum

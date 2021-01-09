@@ -10,11 +10,13 @@ importance_diff = function(wts = NULL, impt = NULL, aggregation = c('ar','geom')
     impt = rep(1/ncol(X), ncol(X))
   }
 
-  Y = agg(X,wts = wts, method = match.arg(aggregation))
+  Y = agg(X,wts = wts, method = match.arg(aggregation)) # aggregating the columns
 
+  #calculating the shapely effects
   res = shapleySubsetMc(X=X,Y=Y, Ntot = Ntot, Ni = Ni, cat = cat, weight = weight,
                         noise = noise, discrete = discrete)
 
+  #distance between shapley effects and desried importances
   distance = stats::dist(rbind(res$shapley,impt))
   return(as.numeric(distance))
 }

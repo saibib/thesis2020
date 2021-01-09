@@ -8,4 +8,8 @@ X=Z%*%C # X is a gaussian vector with zero mean and covariance Sigma
 
 
 optim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 100)
-system("say -v Victoria your code is done idiot")
+
+
+
+optim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 250, method = 'L-BFGS-B')
+system("say -v Victoria your code is done")
