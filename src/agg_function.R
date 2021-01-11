@@ -22,3 +22,4 @@ agg = function(X, wts = NULL, method = c('ar', 'geom')){
   }
   return(scores)
 }
+

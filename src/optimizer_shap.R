@@ -11,5 +11,10 @@ optim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 100)
 
 
 
-optim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 250, method = 'L-BFGS-B')
-system("say -v Victoria your code is done")
+system.time(
+  {
+    optim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 250, method = 'L-BFGS-B')
+  }
+)
+
+
