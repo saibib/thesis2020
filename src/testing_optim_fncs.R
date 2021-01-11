@@ -29,6 +29,15 @@ setDefaultCluster(cl=NULL); stopCluster(cl)
 
 
 ## testing hydropso
+system.time({
+  hydroPSO( fn = importance_diff, X=X, Ntot= 250, lower = rep(0,4), upper = rep(3, 4),control=list(write2disk=FALSE))
+})
 
 
+## testing pso, hasn't converged after 660 iterations
+system.time({
+  res4 = psoptim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 250)
+})
 
+## testins ppso
+optim

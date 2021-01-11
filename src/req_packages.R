@@ -9,5 +9,5 @@ ipak <- function(pkg){
 }
 
 # usage
-packages <- c("ggplot2",  "sensitivity", "here", 'stats')
+packages <- c("ggplot2",  "sensitivity", "here", 'stats', 'optimParallel', 'hydroPSO')
 ipak(packages)
