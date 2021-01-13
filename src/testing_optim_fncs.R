@@ -39,5 +39,10 @@ system.time({
   res4 = psoptim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 250)
 })
 
-## testins ppso
-optim
+## testins DEoptim, takes forever
+system.time(
+  {
+    res5 = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(3, 4), data=X, Ntot= 250)
+  }
+)
+
