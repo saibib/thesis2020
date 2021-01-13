@@ -46,3 +46,11 @@ system.time(
   }
 )
 
+system.time(
+  {
+    res6 = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(3, 4),
+                   control = list(parallelType = 1, packages= c('sensitivity', 'stats','DEoptim'),
+                                  parVar=c('agg','X', 'importance_diff')),
+                   data=X, Ntot= 250)
+  }
+)
