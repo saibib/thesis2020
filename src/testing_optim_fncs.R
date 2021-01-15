@@ -19,13 +19,13 @@ system.time(
 cl <- makeCluster(detectCores()) # set the number of processor cores
 setDefaultCluster(cl=cl)
 
-clusterExport(cl = cl, varlist = list('agg','importance_diff', 'shapleySubsetMc'), envir = environment())
+clusterExport(cl = cl, varlist = list('X','agg','importance_diff', 'shapleySubsetMc'), envir = environment())
 system.time({
-  optimParallel(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 250)
+  rep2 = optimParallel(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, data=X, Ntot= 500)
 })
 
 setDefaultCluster(cl=NULL); stopCluster(cl)
-# takes 72.128s w/ 40 clusters
+# takes 72.128s w/ 40 clusters, ntot =250, 750s when ntot =500, not good results.
 
 
 ## testing hydropso
@@ -36,21 +36,26 @@ system.time({
 
 ## testing pso, hasn't converged after 660 iterations
 system.time({
-  res4 = psoptim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, X=X, Ntot= 250)
+  res4 = psoptim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, lower = rep(0,ncol(X)), data=X, Ntot= 250,
+                 control = list(maxit = 100, maxit.stagnate=20))
 })
 
-## testins DEoptim, takes forever
+## testins DEoptim, takes forever, but gives good results
 system.time(
   {
     res5 = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(3, 4), data=X, Ntot= 250)
   }
 )
 
+# in parallel
+cl <- makeCluster(39) # set the number of processor cores
+setDefaultCluster(cl=cl)
+clusterExport(cl = cl, varlist = list('X', 'agg','importance_diff', 'shapleySubsetMc'), envir = environment())
 system.time(
   {
     res6 = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(3, 4),
-                   control = list(parallelType = 1, packages= c('sensitivity', 'stats','DEoptim'),
-                                  parVar=c('agg','X', 'importance_diff')),
+                   control = list(cluster = cl, itermax = 10),
                    data=X, Ntot= 250)
   }
 )
+setDefaultCluster(cl=NULL); stopCluster(cl)
