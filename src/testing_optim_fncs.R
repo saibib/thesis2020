@@ -28,16 +28,16 @@ setDefaultCluster(cl=NULL); stopCluster(cl)
 # takes 72.128s w/ 40 clusters, ntot =250, 750s when ntot =500, not good results.
 
 
-## testing hydropso
+## testing hydropso, never worked
 system.time({
   hydroPSO( fn = importance_diff, X=X, Ntot= 250, lower = rep(0,4), upper = rep(3, 4),control=list(write2disk=FALSE))
 })
 
 
-## testing pso, hasn't converged after 660 iterations
+## testing pso, hasn't converged after 660 iterations, 20 iterations take 1144.992 iterations
 system.time({
   res4 = psoptim(par = rep(1/ncol(X),ncol(X)), fn = importance_diff, lower = rep(0,ncol(X)), data=X, Ntot= 250,
-                 control = list(maxit = 100, maxit.stagnate=20))
+                 control = list(maxit = 20, maxit.stagnate=10))
 })
 
 ## testins DEoptim, takes forever, but gives good results
@@ -54,8 +54,18 @@ clusterExport(cl = cl, varlist = list('X', 'agg','importance_diff', 'shapleySubs
 system.time(
   {
     res6 = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(3, 4),
-                   control = list(cluster = cl, itermax = 10),
+                   control = list(cluster = cl, itermax = 20),
                    data=X, Ntot= 250)
   }
 )
 setDefaultCluster(cl=NULL); stopCluster(cl)
+
+# need to instal rmpi
+system.time(
+  {
+    res7 = optim_ppso_robust(objective_function=rastrigin_function, nslaves=2, max_number_function_calls=200, projectfile=NULL, logfile=NULL)
+  }
+)
+
+
+
