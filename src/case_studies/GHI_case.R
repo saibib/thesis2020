@@ -22,7 +22,9 @@ orig_shap = shapleySubsetMc(X=ghi,Y=ghi_scores, Ntot = 1500, Ni = 3)
 stats::dist(rbind(orig_shap$shapley,importances))
 
 
-
-
+res = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(1, 4),
+              control = list(itermax = 3),
+              data=ghi, Ntot= 1500, impt = importances)
+system("say -v Victoria Your code is done fuck wad!")
 
 
