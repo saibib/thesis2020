@@ -87,3 +87,15 @@ match(v1,v1)-match(v1,v2)
 
 match(names(sort(ghi_scores[ghi_scores>0])),names(sort(ghi_scores[ghi_scores>0]))) -
   match(names(sort(ghi_scores[ghi_scores>0])),names(sort(ghi_optim_scores[ghi_optim_scores>0])))
+
+data.frame(countries = names(ghi_scores[ghi_scores>0]), old_scores = ghi_scores[ghi_scores>0],
+           optimized_scores = ghi_optim_scores[ghi_optim_scores>0])%>%
+  pivot_longer(-countries,names_to="scores", values_to="value") %>%
+  ggplot(aes(value, fill=scores))+
+  geom_boxplot()
+
+data.frame(countries = names(ghi_scores[ghi_scores>0]), old_scores = ghi_scores[ghi_scores>0],
+           optimized_scores = ghi_optim_scores[ghi_optim_scores>0])%>%
+  pivot_longer(-countries,names_to="scores", values_to="value") %>%
+  wilcox.test(value ~ scores, data = ., paired = TRUE, alternative = "greater")
+
