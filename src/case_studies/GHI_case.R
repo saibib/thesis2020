@@ -99,3 +99,7 @@ data.frame(countries = names(ghi_scores[ghi_scores>0]), old_scores = ghi_scores[
   pivot_longer(-countries,names_to="scores", values_to="value") %>%
   wilcox.test(value ~ scores, data = ., paired = TRUE, alternative = "greater")
 
+install.packages("PairedData")
+library(PairedData)
+before = ghi_scores[ghi_scores>0]
+after = ghi_optim_scores[ghi_optim_scores>0]
