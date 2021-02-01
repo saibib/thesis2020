@@ -3,9 +3,18 @@ library(readxl)
 library(here)
 library(igraph)
 
-epi = read_xlsx(here('data','EPI', 'EPI_Issue_Category.xlsx'))
+epi = read_xlsx(here('data','EPI', 'EPI_Issue_Category.xlsx'),trim_ws = T)
 epi = epi %>% remove_rownames %>% column_to_rownames(var="country")
 importances = c(.2, .16, .02, .02, .03, .03, .24, .03, .06, .06, .15)
+
+epi[epi=="NA"]<-NA
+test <- data.frame(lapply(epi, function(y) {
+  y <- gsub("^\\s+", "", y);
+  y <- gsub("Â", "", y); y
+  y <- gsub("^\\s+", "", y);
+}))
+as.numeric(test)
+
 
 
 importance_diff_mod = function(wts = NULL, impt = NULL, aggregation = c('ar','geom'),data, Ntot = NULL, Ni = 3,
