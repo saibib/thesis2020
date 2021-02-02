@@ -1,20 +1,13 @@
-library(tidyverse)
-library(readxl)
-library(here)
-library(igraph)
+
 
 epi = read_xlsx(here('data','EPI', 'EPI_Issue_Category.xlsx'),trim_ws = T)
-epi = epi %>% remove_rownames %>% column_to_rownames(var="country")
+countries = epi$country
 importances = c(.2, .16, .02, .02, .03, .03, .24, .03, .06, .06, .15)
 
-epi[epi=="NA"]<-NA
-test <- data.frame(lapply(epi, function(y) {
-  y <- gsub("^\\s+", "", y);
-  y <- gsub("Â", "", y); y
-  y <- gsub("^\\s+", "", y);
-}))
-as.numeric(test)
-
+epi = epi %>% select(-country) %>%
+  mutate(across(.cols = everything(), .fns = as.numeric)) %>%
+  as.matrix()
+rownames(epi) = countries
 
 
 importance_diff_mod = function(wts = NULL, impt = NULL, aggregation = c('ar','geom'),data, Ntot = NULL, Ni = 3,
@@ -30,7 +23,7 @@ importance_diff_mod = function(wts = NULL, impt = NULL, aggregation = c('ar','ge
   }
 
   wts <- wts / sum(wts)
-  if (sum(wts[1:4])>.4) return(Inf) #constraint
+  if (sum(wts[1:4])>.4) return(1)
   Y = agg(data,wts = wts, method = match.arg(aggregation)) # aggregating the columns
 
   #calculating the shapely effects
@@ -42,6 +35,22 @@ importance_diff_mod = function(wts = NULL, impt = NULL, aggregation = c('ar','ge
   return(as.numeric(distance))
 }
 
-epi_scores = agg(epi, importances)
+epi_scores = agg(epi, importances,'ar')
+
+orig_shap = shapleySubsetMc(X=epi,Y=epi_scores, Ntot = 5000, Ni = 3)
+stats::dist(rbind(orig_shap$shapley,importances))
+
+data.frame(variable = colnames(epi),desired = importances, shapley = orig_shap$shapley) %>%
+  pivot_longer( -variable, names_to="impt", values_to="value") %>%
+  ggplot(aes(variable,value)) +
+  geom_bar(aes(fill = impt),stat = "identity",position = "dodge")
 
 
+cl <- makeCluster(39) # set the number of processor cores
+setDefaultCluster(cl=cl)
+clusterExport(cl = cl, varlist = list('epi', 'agg','importance_diff_mod', 'shapleySubsetMc'), envir = environment())
+
+res_epi = DEoptim(fn = importance_diff_mod, lower = rep(0,11), upper = rep(1,11),
+              control = list(cluster = cl),
+              data=epi, Ntot= 2500, impt = importances)
+setDefaultCluster(cl=NULL); stopCluster(cl)

@@ -6,14 +6,14 @@ library(grid)
 library(igraph)
 
 
-ghi = read_xlsx(here('data','GHI_cleaned.xlsx'))
+ghi = read_xlsx(here('data','GHI', 'GHI_cleaned.xlsx'))
 ghi = ghi %>% remove_rownames %>% column_to_rownames(var="country")
 ghi[,1] = ghi[,1]/80*100
 ghi[,2] = ghi[,2]/30*100
 ghi[,3] = ghi[,3]/70*100
 ghi[,4] = ghi[,4]/35*100
 
-write.csv(ghi, here('data','GHI_transformed.csv'))
+write.csv(ghi, here('data','GHI','GHI_transformed.csv'))
 colnames(ghi)
 importances = c(1/3,1/3, 1/6, 1/6)
 ghi_scores = agg(ghi, wts = importances,method = 'ar')
@@ -33,7 +33,7 @@ setDefaultCluster(cl=cl)
 clusterExport(cl = cl, varlist = list('ghi', 'agg','importance_diff', 'shapleySubsetMc'), envir = environment())
 
 res = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(1, 4),
-              control = list(cluster = cl, itermax = 10),
+              control = list(cluster = cl),
               data=ghi, Ntot= 1500, impt = importances)
 setDefaultCluster(cl=NULL); stopCluster(cl)
 
@@ -97,9 +97,4 @@ data.frame(countries = names(ghi_scores[ghi_scores>0]), old_scores = ghi_scores[
 data.frame(countries = names(ghi_scores[ghi_scores>0]), old_scores = ghi_scores[ghi_scores>0],
            optimized_scores = ghi_optim_scores[ghi_optim_scores>0])%>%
   pivot_longer(-countries,names_to="scores", values_to="value") %>%
-  wilcox.test(value ~ scores, data = ., paired = TRUE, alternative = "greater")
-
-install.packages("PairedData")
-library(PairedData)
-before = ghi_scores[ghi_scores>0]
-after = ghi_optim_scores[ghi_optim_scores>0]
+  wilcox.test(value ~ scores, data = ., paired = TRUE)
