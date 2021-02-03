@@ -5,7 +5,7 @@ library(ggplot2)
 library(grid)
 library(igraph)
 
-
+# reading in the dataset and applying the preprocessing transformation to the indicators that the GHI does
 ghi = read_xlsx(here('data','GHI', 'GHI_cleaned.xlsx'))
 ghi = ghi %>% remove_rownames %>% column_to_rownames(var="country")
 ghi[,1] = ghi[,1]/80*100
@@ -15,17 +15,15 @@ ghi[,4] = ghi[,4]/35*100
 
 write.csv(ghi, here('data','GHI','GHI_transformed.csv'))
 colnames(ghi)
-importances = c(1/3,1/3, 1/6, 1/6)
-ghi_scores = agg(ghi, wts = importances,method = 'ar')
+importances = c(1/3,1/3, 1/6, 1/6) # importances
+ghi_scores = agg(ghi, wts = importances,method = 'ar') # calculating index score by arithmetic aggregation
 ghi_scores
 
-orig_shap = shapleySubsetMc(X=ghi,Y=ghi_scores, Ntot = 1500, Ni = 3)
-stats::dist(rbind(orig_shap$shapley,importances))
+orig_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_scores, Ntot = 1500, Ni = 3) # est orginal shapley values
+stats::dist(rbind(orig_shap$shapley,importances)) #euclidean distance difference in importances and shapley values
 
-data.frame(variable = colnames(ghi),desired = importances, shapley = orig_shap$shapley) %>%
-  pivot_longer( -variable, names_to="impt", values_to="value") %>%
-  ggplot(aes(variable,value)) +
-  geom_bar(aes(fill = impt),stat = "identity",position = "dodge")
+
+desired_v_shapley(ghi, importances, orig_shap_ghi$shapley) # plot the desired importances vs shapley effects
 
 
 cl <- makeCluster(39) # set the number of processor cores
@@ -38,48 +36,17 @@ res = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(1, 4),
 setDefaultCluster(cl=NULL); stopCluster(cl)
 
 optim_wts = res$optim$bestmem/sum(res$optim$bestmem)
-data.frame(variable = colnames(ghi),old_weights = importances,
-           optimized_weights = optim_wts) %>%
-  pivot_longer( -variable, names_to="weight", values_to="value") %>%
-  ggplot(aes(variable,value)) +
-  geom_bar(aes(fill = weight),stat = "identity",position = "dodge")
 
-
+wts_v_optim_wts(ghi,importances,optim_wts)
 
 ghi_optim_scores = agg(ghi, wts = optim_wts,method = 'ar')
-
+optim_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_optim_scores, Ntot = 1500, Ni = 3)
 
 v1 = names(sort(ghi_scores[ghi_scores>0]))[1:10]
 v2 = names(sort(ghi_optim_scores[ghi_optim_scores>0]))[1:10]
 
 # - https://stackoverflow.com/questions/25781284/simplest-way-to-plot-changes-in-ranking-between-two-ordered-lists-in-r
-plotRanks <- function(a, b, labels.offset=0.1, arrow.len=0.1)
-{
-  old.par <- par(mar=c(1,1,1,1))
 
-  # Find the length of the vectors
-  len.1 <- length(a)
-  len.2 <- length(b)
-
-  # Plot two columns of equidistant points
-  plot(rep(1, len.1), 1:len.1, pch=20, cex=0.8,
-       xlim=c(0, 3), ylim=c(0, max(len.1, len.2)),
-       axes=F, xlab="", ylab="") # Remove axes and labels
-  points(rep(2, len.2), 1:len.2, pch=20, cex=0.8)
-
-  # Put labels next to each observation
-  text(rep(1-labels.offset, len.1), 1:len.1, a)
-  text(rep(2+labels.offset, len.2), 1:len.2, b)
-
-  # Now we need to map where the elements of a are in b
-  # We use the match function for this job
-  a.to.b <- match(a, b)
-
-  # Now we can draw arrows from the first column to the second
-  arrows(rep(1.02, len.1), 1:len.1, rep(1.98, len.2), a.to.b,
-         length=arrow.len, angle=20)
-  par(old.par)
-}
 plotRanks(v1,v2,labels.offset = .4)
 
 
@@ -98,3 +65,16 @@ data.frame(countries = names(ghi_scores[ghi_scores>0]), old_scores = ghi_scores[
            optimized_scores = ghi_optim_scores[ghi_optim_scores>0])%>%
   pivot_longer(-countries,names_to="scores", values_to="value") %>%
   wilcox.test(value ~ scores, data = ., paired = TRUE)
+
+n=1000
+vals = matrix(nr = n, nc=4)
+for (i in 1:n){
+  vals[i,] = shapleySubsetMc(X=ghi,Y=ghi_scores, Ntot = 1500, Ni = 3)$shapley # est orginal shapley values
+  if (i %% 10 ==0) print(i)
+}
+na.omit(vals)
+optim_wts
+stats::dist(rbind(vals,importances))
+
+
+SIGN.test(ghi_scores[ghi_scores>0],ghi_optim_scores[ghi_optim_scores>0])
