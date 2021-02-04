@@ -11,7 +11,7 @@ importance_diff = function(wts = NULL, impt = NULL, aggregation = c('ar','geom')
   }
 
   wts <- wts / sum(wts)
-  Y = agg(data,wts = wts, method = match.arg(aggregation)) # aggregating the columns
+  Y = agg(data,var_wts = wts , agg_method = match.arg(aggregation)) # aggregating the columns
 
   #calculating the shapely effects
   res = shapleySubsetMc(X=data,Y=Y, Ntot = Ntot, Ni = Ni, cat = cat, weight = weight,

@@ -54,6 +54,6 @@ setDefaultCluster(cl=cl)
 clusterExport(cl = cl, varlist = list('epi', 'agg','importance_diff_mod', 'shapleySubsetMc'), envir = environment())
 
 res_epi = DEoptim(fn = importance_diff_mod, lower = rep(0,11), upper = rep(1,11),
-              control = list(cluster = cl),
+              # control = list(cluster = cl),
               data=epi, Ntot= 2500, impt = importances)
 setDefaultCluster(cl=NULL); stopCluster(cl)

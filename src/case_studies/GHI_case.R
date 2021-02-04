@@ -16,7 +16,7 @@ ghi[,4] = ghi[,4]/35*100
 write.csv(ghi, here('data','GHI','GHI_transformed.csv'))
 colnames(ghi)
 importances = c(1/3,1/3, 1/6, 1/6) # importances
-ghi_scores = agg(ghi, wts = importances,method = 'ar') # calculating index score by arithmetic aggregation
+ghi_scores = agg(ghi, var_wts = importances,agg_method = 'ar') # calculating index score by arithmetic aggregation
 ghi_scores
 
 orig_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_scores, Ntot = 1500, Ni = 3) # est orginal shapley values
@@ -26,13 +26,19 @@ stats::dist(rbind(orig_shap$shapley,importances)) #euclidean distance difference
 desired_v_shapley(ghi, importances, orig_shap_ghi$shapley) # plot the desired importances vs shapley effects
 
 
-cl <- makeCluster(39) # set the number of processor cores
+cl <- makeCluster(detectCores()) # set the number of processor cores
 setDefaultCluster(cl=cl)
-clusterExport(cl = cl, varlist = list('ghi', 'agg','importance_diff', 'shapleySubsetMc'), envir = environment())
+clusterExport(cl = cl, varlist = list('ghi', 'agg','importance_diff',
+                                      'shapleySubsetMc','sobolshap_knn','weights_shapley_diff'), envir = environment())
 
 res = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(1, 4),
               control = list(cluster = cl),
               data=ghi, Ntot= 1500, impt = importances)
+
+res = DEoptim(fn = weights_shapley_diff, lower = rep(.1,4), upper = rep(2, 4),
+              control = list(cluster = cl),
+              impt = importances, model =agg, data = ghi,
+              method = 'knn', return.shap = T, n.knn=5, agg_method = 'ar')
 setDefaultCluster(cl=NULL); stopCluster(cl)
 
 optim_wts = res$optim$bestmem/sum(res$optim$bestmem)
