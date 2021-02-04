@@ -37,7 +37,10 @@ importance_diff_mod = function(wts = NULL, impt = NULL, aggregation = c('ar','ge
 
 epi_scores = agg(epi, importances,'ar')
 
-orig_shap = shapleySubsetMc(X=epi,Y=epi_scores, Ntot = 5000, Ni = 3)
+system.time({
+  orig_shap = shapleySubsetMc(X=epi,Y=epi_scores, Ntot = 15000, Ni = 3)
+})
+
 stats::dist(rbind(orig_shap$shapley,importances))
 
 data.frame(variable = colnames(epi),desired = importances, shapley = orig_shap$shapley) %>%
