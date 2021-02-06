@@ -26,17 +26,17 @@ stats::dist(rbind(orig_shap$shapley,importances)) #euclidean distance difference
 desired_v_shapley(ghi, importances, orig_shap_ghi$shapley) # plot the desired importances vs shapley effects
 
 
-cl <- makeCluster(detectCores()) # set the number of processor cores
+cl <- makeCluster(detectCores()-1) # set the number of processor cores
 setDefaultCluster(cl=cl)
 clusterExport(cl = cl, varlist = list('ghi', 'agg','importance_diff',
                                       'shapleySubsetMc','sobolshap_knn','weights_shapley_diff'), envir = environment())
 
 res = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(1, 4),
               control = list(cluster = cl),
-              data=ghi, Ntot= 1500, impt = importances)
+              data=ghi, Ntot= 500, impt = importances)
 
-res = DEoptim(fn = weights_shapley_diff, lower = rep(.1,4), upper = rep(2, 4),
-              control = list(cluster = cl),
+res = DEoptim(fn = weights_shapley_diff, lower = rep(0,4), upper = rep(1, 4),
+              control = list(cluster = cl, CR = .3,F=.3),
               impt = importances, model =agg, data = ghi,
               method = 'knn', return.shap = T, n.knn=5, agg_method = 'ar')
 setDefaultCluster(cl=NULL); stopCluster(cl)
@@ -45,7 +45,7 @@ optim_wts = res$optim$bestmem/sum(res$optim$bestmem)
 
 wts_v_optim_wts(ghi,importances,optim_wts)
 
-ghi_optim_scores = agg(ghi, wts = optim_wts,method = 'ar')
+ghi_optim_scores = agg(ghi, var_wts = optim_wts, agg_method = 'ar')
 optim_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_optim_scores, Ntot = 1500, Ni = 3)
 
 v1 = names(sort(ghi_scores[ghi_scores>0]))[1:10]
