@@ -24,7 +24,7 @@ importance_diff_mod = function(wts = NULL, impt = NULL, aggregation = c('ar','ge
 
   wts <- wts / sum(wts)
   if (sum(wts[1:4])>.4) return(1)
-  Y = agg(data,wts = wts, method = match.arg(aggregation)) # aggregating the columns
+  Y = agg(data,var_wts = wts, agg_method = match.arg(aggregation)) # aggregating the columns
 
   #calculating the shapely effects
   res = shapleySubsetMc(X=data,Y=Y, Ntot = Ntot, Ni = Ni, cat = cat, weight = weight,
@@ -49,11 +49,11 @@ data.frame(variable = colnames(epi),desired = importances, shapley = orig_shap$s
   geom_bar(aes(fill = impt),stat = "identity",position = "dodge")
 
 
-cl <- makeCluster(39) # set the number of processor cores
+cl <- makeCluster(detectCores()-1) # set the number of processor cores
 setDefaultCluster(cl=cl)
 clusterExport(cl = cl, varlist = list('epi', 'agg','importance_diff_mod', 'shapleySubsetMc'), envir = environment())
 
 res_epi = DEoptim(fn = importance_diff_mod, lower = rep(0,11), upper = rep(1,11),
-              # control = list(cluster = cl),
+              control = list(cluster = cl),
               data=epi, Ntot= 2500, impt = importances)
 setDefaultCluster(cl=NULL); stopCluster(cl)
