@@ -53,6 +53,8 @@ ghi %>%
 ghi %>%
   gg_miss_upset(nsets = 7)
 
+
+
 ghi %>%
   mutate(total_na = rowSums(is.na(ghi))) %>%
   ggplot() +
