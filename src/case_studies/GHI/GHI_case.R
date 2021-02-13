@@ -20,7 +20,7 @@ ghi_scores = agg(ghi, var_wts = importances,agg_method = 'ar') # calculating ind
 ghi_scores
 
 orig_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_scores, Ntot = 1500, Ni = 3) # est orginal shapley values
-stats::dist(rbind(orig_shap$shapley,importances)) #euclidean distance difference in importances and shapley values
+stats::dist(rbind(orig_shap_ghi$shapley,importances)) #euclidean distance difference in importances and shapley values
 
 
 desired_v_shapley(ghi, importances, orig_shap_ghi$shapley) # plot the desired importances vs shapley effects
