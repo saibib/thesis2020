@@ -11,6 +11,6 @@ ipak <- function(pkg){
 # usage
 packages <- c("ggplot2",  "sensitivity", "here", 'stats', 'optimParallel',
               'hydroPSO', 'votesys', 'DEoptim', 'pso','ppso', 'tidyverse', 'readxl',
-              'here', 'igraph')
+              'here', 'igraph', 'dplyr', 'readxl', 'here', 'ggplot2')
 ipak(packages)
 

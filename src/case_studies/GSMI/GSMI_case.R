@@ -50,10 +50,25 @@ gsmi_res = DEoptim(fn = importance_diff, lower = rep(0,10), upper = rep(1, 10),
               control = list(cluster = cl),
               data=gsmi, Ntot= 1500, impt = gsmi_impt)
 
-gsmi_res = DEoptim(fn = weights_shapley_diff, lower = rep(0,10), upper = rep(1, 10),
-              control = list(cluster = cl),
-              impt = gsmi_impt, model =agg, data = gsmi,
-              method = 'knn', return.shap = T, n.knn=5, agg_method = 'ar')
+# gsmi_res = DEoptim(fn = weights_shapley_diff, lower = rep(0,10), upper = rep(1, 10),
+#               control = list(cluster = cl),
+#               impt = gsmi_impt, model =agg, data = gsmi,
+#               method = 'knn', return.shap = T, n.knn=5, agg_method = 'ar')
 setDefaultCluster(cl=NULL); stopCluster(cl)
 
+gsmi_optim_wts = gsmi_res$optim$bestmem/sum(gsmi_res$optim$bestmem)
 
+wts_v_optim_wts(gsmi,gsmi_impt,gsmi_optim_wts)
+
+gsmi_optim_scores = agg(gsmi, var_wts = gsmi_optim_wts, agg_method = 'ar')
+optim_shap_gsmi = shapleySubsetMc(X=gsmi,Y=gsmi_optim_scores, Ntot = 1500, Ni = 3)
+
+
+v1 = names(sort(gsmi_scores[gsmi_scores>0]))[1:25]
+v2 = names(sort(gsmi_optim_scores[gsmi_optim_scores>0]))[1:25]
+
+plotRanks(v1,v2,labels.offset = .5)
+
+match(v1,v1)-match(v1,v2)
+match(names(sort(gsmi_scores[gsmi_scores>0])),names(sort(gsmi_scores[gsmi_scores>0]))) -
+  match(names(sort(gsmi_scores[gsmi_scores>0])),names(sort(gsmi_optim_scores[gsmi_optim_scores>0])))
