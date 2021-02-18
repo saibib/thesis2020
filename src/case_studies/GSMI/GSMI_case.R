@@ -44,11 +44,16 @@ desired_v_shapley(gsmi, gsmi_impt, orig_shap_gsmi$shapley) # plot the desired im
 
 cl <- makeCluster(detectCores()-1) # set the number of processor cores
 setDefaultCluster(cl=cl)
-clusterExport(cl = cl, varlist = list('gsmi', 'agg','sobolshap_knn','weights_shapley_diff'), envir = environment())
+clusterExport(cl = cl, varlist = list('gsmi', 'agg','sobolshap_knn','weights_shapley_diff', 'shapleySubsetMc'), envir = environment())
+
+gsmi_res = DEoptim(fn = importance_diff, lower = rep(0,10), upper = rep(1, 10),
+              control = list(cluster = cl),
+              data=gsmi, Ntot= 1500, impt = gsmi_impt)
 
 gsmi_res = DEoptim(fn = weights_shapley_diff, lower = rep(0,10), upper = rep(1, 10),
-              control = list(cluster = cl, CR = .3,F=.3),
+              control = list(cluster = cl),
               impt = gsmi_impt, model =agg, data = gsmi,
               method = 'knn', return.shap = T, n.knn=5, agg_method = 'ar')
 setDefaultCluster(cl=NULL); stopCluster(cl)
+
 
