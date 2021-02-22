@@ -2,7 +2,7 @@
 
 epi = read_xlsx(here('data','EPI', 'EPI_Issue_Category.xlsx'),trim_ws = T)
 countries = epi$country
-importances = c(.2, .16, .02, .02, .03, .03, .24, .03, .06, .06, .15)
+epi_impt = c(.2, .16, .02, .02, .03, .03, .24, .03, .06, .06, .15)
 
 epi = epi %>% select(-country) %>%
   mutate(across(.cols = everything(), .fns = as.numeric)) %>%
@@ -35,25 +35,22 @@ importance_diff_mod = function(wts = NULL, impt = NULL, aggregation = c('ar','ge
   return(as.numeric(distance))
 }
 
-epi_scores = agg(epi, importances,'ar')
+epi_scores = agg(epi, epi_impt,'ar')
 
 system.time({
-  orig_shap = shapleySubsetMc(X=epi,Y=epi_scores, Ntot = 15000, Ni = 3)
+  orig_shap_epi = shapleySubsetMc(X=epi,Y=epi_scores, Ntot = 15000, Ni = 3)
 })
 
-stats::dist(rbind(orig_shap$shapley,importances))
+stats::dist(rbind(orig_shap_epi$shapley,epi_impt))
 
-data.frame(variable = colnames(epi),desired = importances, shapley = orig_shap$shapley) %>%
-  pivot_longer( -variable, names_to="impt", values_to="value") %>%
-  ggplot(aes(variable,value)) +
-  geom_bar(aes(fill = impt),stat = "identity",position = "dodge")
+desired_v_shapley(epi, epi_impt, orig_shap_epi$shapley) # plot the desired importances vs shapley effects
 
 
 cl <- makeCluster(detectCores()-1) # set the number of processor cores
 setDefaultCluster(cl=cl)
 clusterExport(cl = cl, varlist = list('epi', 'agg','importance_diff_mod', 'shapleySubsetMc'), envir = environment())
 
-res_epi = DEoptim(fn = importance_diff_mod, lower = rep(0,11), upper = rep(1,11),
+res_epi = DEoptim(fn = importance_diff_mod, lower = rep(0,ncol(epi)), upper = rep(1,ncol(epi)),
               control = list(cluster = cl),
-              data=epi, Ntot= 2500, impt = importances)
+              data=epi, Ntot= 2500, impt = epi_impt)
 setDefaultCluster(cl=NULL); stopCluster(cl)
