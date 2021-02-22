@@ -118,3 +118,18 @@ reactable(rankshifts, rownames = F, columns = list(
   bordered = TRUE, compact = TRUE,
   defaultPageSize=25)
 
+
+install.packages('rworldmap')
+library(rworldmap)
+
+levels(rankshifts$country) <- c(levels(rankshifts$country), "Ivory Coast")
+rankshifts$country[rankshifts$country == "Côte d'Ivoire"] <- 'Ivory Coast'
+
+
+
+colourPalette <- RColorBrewer::brewer.pal(7,'RdYlGn')
+sPDF <- joinCountryData2Map( rankshifts, joinCode = "NAME", nameJoinColumn = "country", verbose = T)
+mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=FALSE,
+                                    missingCountryCol = gray(.9), colourPalette = colourPalette )
+do.call( addMapLegend, c( mapParams.shifts, legendLabels="all", legendWidth=0.5, legendIntervals="data", legendMar = 2 ) )
+
