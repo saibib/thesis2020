@@ -77,7 +77,7 @@ rankshifts  = data.frame(country = as.factor(v1),  old_scores =sort(gsmi_scores)
 rankshifts %>%
   arrange(change) %>%
 ggplot(aes(x=reorder(country, -change), y=change)) +
-  geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=1, yend=change), color="grey") +
+  geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
   geom_point( color="orange", size=2) +
   theme_bw()+
   theme(
@@ -89,11 +89,13 @@ ggplot(aes(x=reorder(country, -change), y=change)) +
   ggtitle('Change in Rank After Applying Optimized Weights')+
   xlab("") +
   ylab("Change in Rank")
+# make vertical
+# double ended, one dot for original rank, other dot for new rank
 
 
 install.packages('reactable')
 library(reactable)
-
+# heat map 82x82
 reactable(rankshifts, rownames = F, columns = list(
   country = colDef(name = "Country", align = 'center'),
   old_scores = colDef(name = "Original Scores",format = colFormat(digits = 2)),
