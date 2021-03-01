@@ -69,10 +69,12 @@ v2 = names(sort(gsmi_optim_scores))
 
 plotRanks(v1,v2,labels.offset = .5)
 
+SIGN.test(gsmi_scores,gsmi_optim_scores)
+
 # match(names(sort(gsmi_scores[gsmi_scores>0])),names(sort(gsmi_scores[gsmi_scores>0]))) -
   # match(names(sort(gsmi_scores[gsmi_scores>0])),names(sort(gsmi_optim_scores[gsmi_optim_scores>0])))
-rankshifts  = data.frame(country = as.factor(v1),  old_scores =sort(gsmi_scores),
-                         new_scores =  sort(gsmi_optim_scores), change = match(v1,v1)-match(v1,v2))
+rankshifts  = data.frame(country = as.factor(v1),  old_scores =gsmi_scores[as.factor(v1)],
+                         new_scores =  gsmi_optim_scores[as.factor(v1)], change = match(v1,v1)-match(v1,v2))
 
 rankshifts %>%
 ggplot(aes(x=reorder(country, -change), y=change)) +

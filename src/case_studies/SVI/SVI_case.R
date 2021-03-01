@@ -25,34 +25,34 @@ rownames(toi) = svi$FIPS
 
 voi_impt = rep(1/ncol(voi), ncol(voi))
 # toi_impt = c(4/15, 4/15,2/15,5/15)
-toi_impt = rep(1,4)
+toi_impt = rep(1/4,4)
 
 svi_scores = agg(voi, voi_impt)
 
 # 15*agg(voi, voi_impt)['26065004492'] == svi_scores['26065004492']
 #
 
-orig_shap_svi = shapleySubsetMc(X=voi,Y=svi_scores, Ntot = 15000, Ni = 3) # est orginal shapley values
-orig_shap_svi = sobolshap_knn(agg, voi, method = 'knn', return.shap = T, n.knn=4,
-                              randperm = T, n.perm=30, var_wts = voi_impt)
+orig_shap_svi = shapleySubsetMc(X=toi,Y=svi_scores, Ntot = 7500, Ni = 3) # est orginal shapley values
+orig_shap_svi = sobolshap_knn(agg, toi, method = 'knn', return.shap = T, n.knn=2,
+                              randperm = T, n.perm=30, var_wts = toi_impt)
 stats::dist(rbind(orig_shap_svi$shapley,toi_impt)) #euclidean distance difference in importances and shapley values
 
 desired_v_shapley(toi, toi_impt, orig_shap_svi$shapley) # plot the desired importances vs shapley effects
 
 cl <- makeCluster(detectCores()-1) # set the number of processor cores
 setDefaultCluster(cl=cl)
-clusterExport(cl = cl, varlist = list('voi', 'agg', 'sobolshap_knn',
-                                      'weights_shapley_diff'), envir = environment())
+clusterExport(cl = cl, varlist = list('toi', 'agg', 'sobolshap_knn',
+                                      'weights_shapley_diff', 'importance_diff',
+                                      'shapleySubsetMc'), envir = environment())
 
 res_svi = DEoptim(fn = importance_diff, lower = rep(0,4), upper = rep(3, 4),
               control = list(cluster = cl),
-              data=toi, Ntot= 1500, impt = toi_impt)
+              data=toi, Ntot= 7500, impt = toi_impt)
 
-res_svi = DEoptim(fn = weights_shapley_diff, lower = rep(0,ncol(voi)), upper = rep(1, ncol(voi)),
-              control = list(cluster = cl),
-              impt = voi_impt, model = agg, data = voi,
-              method = 'knn', return.shap = T, n.knn=4,
-              randperm = T, n.perm=30)
+res_svi = DEoptim(fn = weights_shapley_diff, lower = rep(0,ncol(toi)), upper = rep(2, ncol(toi)),
+                  control = list(cluster = cl),
+                  impt = toi_impt, model =agg, data = toi,
+                  method = 'knn', randperm = T, n.perm=30, n.knn=2, agg_method = 'ar')
 setDefaultCluster(cl=NULL); stopCluster(cl)
 
 optim_wts_svi = res_svi$optim$bestmem/sum(res_svi$optim$bestmem)

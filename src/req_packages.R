@@ -9,8 +9,8 @@ ipak <- function(pkg){
 }
 
 # usage
-packages <- c("ggplot2",  "sensitivity", "here", 'stats', 'optimParallel',
-              'hydroPSO', 'votesys', 'DEoptim', 'pso','ppso', 'tidyverse', 'readxl',
-              'here', 'igraph', 'dplyr', 'readxl', 'here', 'ggplot2','corrplot')
+packages <- c("ggplot2",  "sensitivity", "here", 'stats',
+               'votesys', 'DEoptim',  'tidyverse', 'readxl',
+              'here', 'igraph', 'dplyr', 'readxl','corrplot','BSDA','rworldmap')
 ipak(packages)
 

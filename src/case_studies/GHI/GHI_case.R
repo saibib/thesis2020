@@ -48,8 +48,8 @@ wts_v_optim_wts(ghi,importances,optim_wts)
 ghi_optim_scores = agg(ghi, var_wts = optim_wts, agg_method = 'ar')
 optim_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_optim_scores, Ntot = 1500, Ni = 3)
 
-v1 = names(sort(ghi_scores[ghi_scores>0]))[1:25]
-v2 = names(sort(ghi_optim_scores[ghi_optim_scores>0]))[1:25]
+v1 = names(sort(ghi_scores[ghi_scores>0]))
+v2 = names(sort(ghi_optim_scores[ghi_optim_scores>0]))
 
 # - https://stackoverflow.com/questions/25781284/simplest-way-to-plot-changes-in-ranking-between-two-ordered-lists-in-r
 
@@ -77,3 +77,55 @@ data.frame(countries = names(ghi_scores[ghi_scores>0]), old_scores = ghi_scores[
 
 SIGN.test(ghi_scores[ghi_scores>0],ghi_optim_scores[ghi_optim_scores>0])
 
+ghi_scores = ghi_scores[ghi_scores>0]
+ghi_optim_scores = ghi_optim_scores[ghi_optim_scores>0]
+rankshifts  = data.frame(country = as.factor(v1),  old_scores = ghi_scores[as.factor(v1)],
+                         new_scores =  ghi_optim_scores[as.factor(v1)], change = match(v1,v1)-match(v1,v2))
+rankshifts %>%
+  ggplot(aes(x=reorder(country, -change), y=change)) +
+  geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
+  geom_point( color="orange", size=2) +
+  theme_bw()+
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+  coord_flip()+
+  ggtitle('Change in Rank After Applying Optimized Weights')+
+  xlab("") +
+  ylab("Change in Rank")
+
+rankshifts %>%
+  arrange(old_scores)%>%
+  mutate(country = factor(country, country)) %>%
+  ggplot() +
+  geom_segment( aes(x=country, xend=country, y=old_scores, yend=new_scores), color="grey") +
+  geom_point( aes(x=country, y=old_scores), color='lightblue', size=3 ) +
+  geom_point( aes(x=country, y=new_scores), color='orange', size=3 ) +
+  coord_flip()+
+  xlab("") +
+  ylab("Value of Y")
+
+
+map_data = rankshifts
+colourPalette <- RColorBrewer::brewer.pal(10,'RdYlGn')
+sPDF <- joinCountryData2Map( map_data, joinCode = "NAME", nameJoinColumn = "country", verbose = T,)
+mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=FALSE,
+                                    missingCountryCol = gray(.9), colourPalette = colourPalette )
+do.call( addMapLegend, c( mapParams.shifts, legendLabels="all", legendWidth=0.5, legendIntervals="page", legendMar = 2 ) )
+
+
+map_data$ADMIN = map_data$country
+map_data = merge(map_data, countryRegions, by.x = 'ADMIN')
+
+map_data %>%
+  select(country, old_scores, new_scores, continent)%>%
+  pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
+  ggplot(aes(continent, values, fill = method ))+
+  geom_split_violin()
+
+ggplot(rankshifts, aes(x=old_scores, y=new_scores) ) +
+  geom_hex(bins = 70) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
