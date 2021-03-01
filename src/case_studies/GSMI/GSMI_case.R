@@ -75,7 +75,6 @@ rankshifts  = data.frame(country = as.factor(v1),  old_scores =sort(gsmi_scores)
                          new_scores =  sort(gsmi_optim_scores), change = match(v1,v1)-match(v1,v2))
 
 rankshifts %>%
-  arrange(change) %>%
 ggplot(aes(x=reorder(country, -change), y=change)) +
   geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
   geom_point( color="orange", size=2) +
@@ -85,15 +84,25 @@ ggplot(aes(x=reorder(country, -change), y=change)) +
     panel.border = element_blank(),
     axis.ticks.x = element_blank()
   ) +
-  scale_x_discrete(guide = guide_axis(angle = 90)) +
+  coord_flip()+
   ggtitle('Change in Rank After Applying Optimized Weights')+
   xlab("") +
   ylab("Change in Rank")
-# make vertical
+
+rankshifts %>%
+  arrange(old_scores)%>%
+  mutate(country = factor(country, country)) %>%
+  ggplot() +
+  geom_segment( aes(x=country, xend=country, y=old_scores, yend=new_scores), color="grey") +
+  geom_point( aes(x=country, y=old_scores), color='lightblue', size=3 ) +
+  geom_point( aes(x=country, y=new_scores), color='orange', size=3 ) +
+  coord_flip()+
+  xlab("") +
+  ylab("Value of Y")
 # double ended, one dot for original rank, other dot for new rank
 
 
-install.packages('reactable')
+# install.packages('reactable')
 library(reactable)
 # heat map 82x82
 reactable(rankshifts, rownames = F, columns = list(
@@ -123,15 +132,41 @@ reactable(rankshifts, rownames = F, columns = list(
 
 install.packages('rworldmap')
 library(rworldmap)
-
-levels(rankshifts$country) <- c(levels(rankshifts$country), "Ivory Coast")
-rankshifts$country[rankshifts$country == "Côte d'Ivoire"] <- 'Ivory Coast'
+map_data = rankshifts
+levels(map_data$country) <- c(levels(map_data$country), "Ivory Coast")
+map_data$country[map_data$country == "Côte d'Ivoire"] <- 'Ivory Coast'
 
 
 
 colourPalette <- RColorBrewer::brewer.pal(7,'RdYlGn')
-sPDF <- joinCountryData2Map( rankshifts, joinCode = "NAME", nameJoinColumn = "country", verbose = T)
+sPDF <- joinCountryData2Map( map_data, joinCode = "NAME", nameJoinColumn = "country", verbose = T,)
 mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=FALSE,
                                     missingCountryCol = gray(.9), colourPalette = colourPalette )
 do.call( addMapLegend, c( mapParams.shifts, legendLabels="all", legendWidth=0.5, legendIntervals="data", legendMar = 2 ) )
 
+
+map_data$ADMIN = map_data$country
+map_data = merge(map_data, countryRegions, by.x = 'ADMIN')
+
+map_data %>%
+  select(country, old_scores, new_scores, continent)%>%
+  pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
+  ggplot(aes(continent, values, fill = method ))+
+  geom_split_violin()
+
+# map_data %>%
+#   select(old_scores, new_scores, continent)%>%
+#   group_by(continent)%>%
+#   mutate(mean_old = mean(old_scores), mean_new = mean(new_score))
+#   ggplot() +
+#   geom_segment( aes(x=continent, xend=continent, y=mean(old_scores), yend=mean(new_scores)), color="grey") +
+#   geom_point( aes(x=continent, y=mean(old_scores)), color='lightblue', size=3 ) +
+#   geom_point( aes(x=continent, y=mean(new_scores)), color='orange', size=3 ) +
+#   coord_flip()+
+#   xlab("") +
+#   ylab("Value of Y")
+
+ggplot(rankshifts, aes(x=old_scores, y=new_scores) ) +
+  geom_hex(bins = 70) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()
