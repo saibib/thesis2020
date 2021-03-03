@@ -11,6 +11,8 @@ ipak <- function(pkg){
 # usage
 packages <- c("ggplot2",  "sensitivity", "here", 'stats',
                'votesys', 'DEoptim',  'tidyverse', 'readxl',
-              'here', 'igraph', 'dplyr', 'readxl','corrplot','BSDA','rworldmap')
+              'here', 'igraph', 'dplyr', 'readxl','corrplot','BSDA',
+              'rworldmap', 'reactable','htmlwidgets','webshot','scales',
+              'sf', 'rnaturalearth', 'rnaturalearthdata')
 ipak(packages)
 

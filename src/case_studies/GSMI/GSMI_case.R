@@ -76,7 +76,7 @@ SIGN.test(gsmi_scores,gsmi_optim_scores)
 rankshifts  = data.frame(country = as.factor(v1),  old_scores =gsmi_scores[as.factor(v1)],
                          new_scores =  gsmi_optim_scores[as.factor(v1)], change = match(v1,v1)-match(v1,v2))
 
-rankshifts %>%
+q = rankshifts %>%
 ggplot(aes(x=reorder(country, -change), y=change)) +
   geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
   geom_point( color="orange", size=2) +
@@ -89,9 +89,11 @@ ggplot(aes(x=reorder(country, -change), y=change)) +
   coord_flip()+
   ggtitle('Change in Rank After Applying Optimized Weights')+
   xlab("") +
-  ylab("Change in Rank")
+  ylab("Change in Rank")+
+  theme_light()
+ggsave(plot = q, width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_ranks_loli.png")
 
-rankshifts %>%
+p = rankshifts %>%
   arrange(old_scores)%>%
   mutate(country = factor(country, country)) %>%
   ggplot() +
@@ -99,15 +101,18 @@ rankshifts %>%
   geom_point( aes(x=country, y=old_scores), color='lightblue', size=3 ) +
   geom_point( aes(x=country, y=new_scores), color='orange', size=3 ) +
   coord_flip()+
-  xlab("") +
-  ylab("Value of Y")
+  ggtitle('Change in Scores After Applying Optimized Weights')+
+  xlab("Country (in order of original rank)") +
+  ylab("Composite Score")+
+  theme_light()
 # double ended, one dot for original rank, other dot for new rank
+ggsave(plot = p, width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_scores_loli.png")
 
 
 # install.packages('reactable')
-library(reactable)
+
 # heat map 82x82
-reactable(rankshifts, rownames = F, columns = list(
+tbl = reactable(rankshifts, rownames = F, columns = list(
   country = colDef(name = "Country", align = 'center'),
   old_scores = colDef(name = "Original Scores",format = colFormat(digits = 2)),
   new_scores = colDef(name = 'Optimized Scores', format = colFormat(digits = 2)),
@@ -129,23 +134,36 @@ reactable(rankshifts, rownames = F, columns = list(
   ),
   defaultSorted = list(old_scores = 'desc'),
   bordered = TRUE, compact = TRUE,
-  defaultPageSize=25)
+  defaultPageSize=15)
 
 
-install.packages('rworldmap')
-library(rworldmap)
 map_data = rankshifts
 levels(map_data$country) <- c(levels(map_data$country), "Ivory Coast")
 map_data$country[map_data$country == "Côte d'Ivoire"] <- 'Ivory Coast'
 
 
+library(scales)
+library(sf)
+library(rnaturalearth)
+library(rnaturalearthdata)
 
-colourPalette <- RColorBrewer::brewer.pal(7,'RdYlGn')
+colourPalette <- RColorBrewer::brewer.pal(9,'RdYlGn')
 sPDF <- joinCountryData2Map( map_data, joinCode = "NAME", nameJoinColumn = "country", verbose = T,)
-mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=FALSE,
-                                    missingCountryCol = gray(.9), colourPalette = colourPalette )
+mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=T,
+                                    missingCountryCol = gray(.9), colourPalette = colourPalette,
+                                    catMethod=c(-7,-5,-3,-1,1-3,5,6))
 do.call( addMapLegend, c( mapParams.shifts, legendLabels="all", legendWidth=0.5, legendIntervals="data", legendMar = 2 ) )
 
+
+map_data$admin = map_data$country
+
+world <- ne_countries(scale = "medium", returnclass = "sf")
+COVID.world <- merge(world, map_data, by.x="admin")
+
+ggplot(data = COVID.world) +
+  geom_sf(aes(fill=change)) +
+  scale_fill_gradient(label=comma) +
+  theme_void()
 
 map_data$ADMIN = map_data$country
 map_data = merge(map_data, countryRegions, by.x = 'ADMIN')
