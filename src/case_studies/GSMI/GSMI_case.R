@@ -76,7 +76,7 @@ SIGN.test(gsmi_scores,gsmi_optim_scores)
 rankshifts  = data.frame(country = as.factor(v1),  old_scores =gsmi_scores[as.factor(v1)],
                          new_scores =  gsmi_optim_scores[as.factor(v1)], change = match(v1,v1)-match(v1,v2))
 
-q = rankshifts %>%
+rankshifts %>%
 ggplot(aes(x=reorder(country, -change), y=change)) +
   geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
   geom_point( color="orange", size=2) +
@@ -87,13 +87,13 @@ ggplot(aes(x=reorder(country, -change), y=change)) +
     axis.ticks.x = element_blank()
   ) +
   coord_flip()+
-  ggtitle('Change in Rank After Applying Optimized Weights')+
+  ggtitle('Change in GSMI Rank After Applying Optimized Weights')+
   xlab("") +
   ylab("Change in Rank")+
-  theme_light()
-ggsave(plot = q, width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_ranks_loli.png")
+  theme_light()+
+  ggsave(width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_ranks_loli.png")
 
-p = rankshifts %>%
+rankshifts %>%
   arrange(old_scores)%>%
   mutate(country = factor(country, country)) %>%
   ggplot() +
@@ -101,12 +101,11 @@ p = rankshifts %>%
   geom_point( aes(x=country, y=old_scores), color='lightblue', size=3 ) +
   geom_point( aes(x=country, y=new_scores), color='orange', size=3 ) +
   coord_flip()+
-  ggtitle('Change in Scores After Applying Optimized Weights')+
+  ggtitle('Change in GSMI Scores After Applying Optimized Weights')+
   xlab("Country (in order of original rank)") +
   ylab("Composite Score")+
-  theme_light()
-# double ended, one dot for original rank, other dot for new rank
-ggsave(plot = p, width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_scores_loli.png")
+  theme_light()+
+  ggsave( width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_scores_loli.png")
 
 
 # install.packages('reactable')
@@ -138,41 +137,63 @@ tbl = reactable(rankshifts, rownames = F, columns = list(
 
 
 map_data = rankshifts
-levels(map_data$country) <- c(levels(map_data$country), "Ivory Coast")
+levels(map_data$country) <- c(levels(map_data$country), "Ivory Coast", "United States of America" ,
+                              'Laos', 'Vietnam', 'South Korea',"Republic of Serbia","Slovakia" ,
+                              "Russia")
 map_data$country[map_data$country == "Côte d'Ivoire"] <- 'Ivory Coast'
+map_data$country[map_data$country == "Lao PDR"] <- 'Laos'
+map_data$country[map_data$country == "Viet Nam" ] <- 'Vietnam'
+map_data$country[map_data$country == "Serbia" ] <- "Republic of Serbia"
+map_data$country[map_data$country == "Korea, Rep."   ] <- 'South Korea'
+map_data$country[map_data$country == "United States"   ] <- "United States of America"
+map_data$country[map_data$country ==  "Russian Federation" ] <- "Russia"
+map_data$country[map_data$country ==  "Slovak Republic"  ] <- "Slovakia"
 
 
-library(scales)
-library(sf)
-library(rnaturalearth)
-library(rnaturalearthdata)
-
-colourPalette <- RColorBrewer::brewer.pal(9,'RdYlGn')
-sPDF <- joinCountryData2Map( map_data, joinCode = "NAME", nameJoinColumn = "country", verbose = T,)
-mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=T,
-                                    missingCountryCol = gray(.9), colourPalette = colourPalette,
-                                    catMethod=c(-7,-5,-3,-1,1-3,5,6))
-do.call( addMapLegend, c( mapParams.shifts, legendLabels="all", legendWidth=0.5, legendIntervals="data", legendMar = 2 ) )
-
-
+# colourPalette <- RColorBrewer::brewer.pal(9,'RdYlGn')
+# sPDF <- joinCountryData2Map( map_data, joinCode = "NAME", nameJoinColumn = "country", verbose = T,)
+# mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=F,
+#                                     missingCountryCol = gray(.9), colourPalette = colourPalette)
+# do.call( addMapLegend, c( mapParams.shifts, legendLabels="all", legendWidth=0.5, legendIntervals="data", legendMar = 2 ) )
+#
+# world_map<-map_data("world")
 map_data$admin = map_data$country
 
 world <- ne_countries(scale = "medium", returnclass = "sf")
-COVID.world <- merge(world, map_data, by.x="admin")
+sf_dat <- merge(world, map_data, by.x="admin")
+# sf_dat$change = as.factor(sf_dat$change)
 
-ggplot(data = COVID.world) +
-  geom_sf(aes(fill=change)) +
-  scale_fill_gradient(label=comma) +
-  theme_void()
+sf_dat %>%
+ggplot() +
+  geom_map(dat=world_map, map = world_map,
+           aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
+  geom_sf(aes(fill=change), color = 'black') +
+  scale_fill_binned(breaks = c(-4,-2,0,2,4),low = 'orange',high = 'blue')+
+  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  theme_light()+
+  ggtitle('Map of GSMI Rank Shifts')+
+  ggsave('figs/GSMI/gsmi_rank_map.png')
+
+
 
 map_data$ADMIN = map_data$country
 map_data = merge(map_data, countryRegions, by.x = 'ADMIN')
 
-map_data %>%
+sf_dat %>%
+  st_drop_geometry() %>%
   select(country, old_scores, new_scores, continent)%>%
   pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
+  filter(!continent %in% c('Oceania') ) %>%
   ggplot(aes(continent, values, fill = method ))+
-  geom_split_violin()
+  geom_split_violin()+
+  geom_boxplot(width = .1, color = 'white',position = position_dodge(.3))+
+  theme_light()+
+  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+                    labels = c("Optimized", "Original"))+
+  xlab('Continent')+
+  ylab('Composite Score')+
+  ggtitle('GSMI Scores Distributions by Weighting Scheme')+
+  ggsave('figs/GSMI/gsmi_scores_violin.png')
 
 # map_data %>%
 #   select(old_scores, new_scores, continent)%>%

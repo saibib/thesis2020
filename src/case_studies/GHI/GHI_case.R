@@ -92,38 +92,96 @@ rankshifts %>%
     axis.ticks.x = element_blank()
   ) +
   coord_flip()+
-  ggtitle('Change in Rank After Applying Optimized Weights')+
+  ggtitle('Change in GHI Rank After Applying Optimized Weights')+
   xlab("") +
-  ylab("Change in Rank")
+  ylab("Change in Rank")+
+  theme_light()+
+  ggsave( width = 8, height = 12, dpi = 300, filename = "figs/GHI/ghi_rank_loli.png")
+
 
 rankshifts %>%
-  arrange(old_scores)%>%
+  arrange(-old_scores)%>%
   mutate(country = factor(country, country)) %>%
   ggplot() +
   geom_segment( aes(x=country, xend=country, y=old_scores, yend=new_scores), color="grey") +
   geom_point( aes(x=country, y=old_scores), color='lightblue', size=3 ) +
   geom_point( aes(x=country, y=new_scores), color='orange', size=3 ) +
   coord_flip()+
-  xlab("") +
-  ylab("Value of Y")
+  ggtitle('Change in GHI Scores After Applying Optimized Weights')+
+  xlab("Country (in order of original rank)") +
+  ylab("GHI Score")+
+  theme_light()+
+  ggsave( width = 9, height = 14, dpi = 300, filename = "figs/GHI/ghi_scores_loli.png")
 
 
 map_data = rankshifts
-colourPalette <- RColorBrewer::brewer.pal(10,'RdYlGn')
-sPDF <- joinCountryData2Map( map_data, joinCode = "NAME", nameJoinColumn = "country", verbose = T,)
-mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=FALSE,
-                                    missingCountryCol = gray(.9), colourPalette = colourPalette )
-do.call( addMapLegend, c( mapParams.shifts, legendLabels="all", legendWidth=0.5, legendIntervals="page", legendMar = 2 ) )
+
+levels(map_data$country) <- c(levels(map_data$country),
+                              "Slovakia" ,"Macedonia", "Bosnia and Herzegovina","Russia",
+                              "Republic of Serbia", "Kyrgyzstan", "Trinidad and Tobago", 'Vietnam',
+                              "Swaziland", "Ivory Coast", 'Laos', "United Republic of Tanzania",
+                              "Guinea Bissau", "Republic of Congo", "East Timor")
+
+map_data$country[map_data$country == "Côte d'Ivoire"        ] <- 'Ivory Coast'
+map_data$country[map_data$country == "Lao PDR"              ] <- 'Laos'
+map_data$country[map_data$country == "Viet Nam"             ] <- 'Vietnam'
+map_data$country[map_data$country == "Serbia"               ] <- "Republic of Serbia"
+map_data$country[map_data$country ==  "Russian Federation"  ] <- "Russia"
+map_data$country[map_data$country ==  "Slovak Republic"     ] <- "Slovakia"
+map_data$country[map_data$country ==  "North Macedonia"     ] <- "Macedonia"
+map_data$country[map_data$country ==  "Bosnia & Herzegovina"] <- "Bosnia and Herzegovina"
+map_data$country[map_data$country ==  "Kyrgyz Republic"     ] <- "Kyrgyzstan"
+map_data$country[map_data$country ==  "Trinidad & Tobago"   ] <- "Trinidad and Tobago"
+map_data$country[map_data$country ==  "Eswatini"            ] <- "Swaziland"
+map_data$country[map_data$country ==  "Tanzania"            ] <- "United Republic of Tanzania"
+map_data$country[map_data$country ==  "Guinea-Bissau"       ] <- "Guinea Bissau"
+map_data$country[map_data$country ==  "Congo, Rep."         ] <- "Republic of Congo"
+map_data$country[map_data$country ==  "Timor-Leste"         ] <- "East Timor"
 
 
-map_data$ADMIN = map_data$country
-map_data = merge(map_data, countryRegions, by.x = 'ADMIN')
+# colourPalette <- RColorBrewer::brewer.pal(10,'RdYlGn')
+# sPDF <- joinCountryData2Map( map_data, joinCode = "NAME", nameJoinColumn = "country", verbose = T,)
+# mapParams.shifts <- mapCountryData( sPDF, nameColumnToPlot="change", addLegend=FALSE,
+#                                     missingCountryCol = gray(.9), colourPalette = colourPalette )
+# do.call( addMapLegend, c( mapParams.shifts, legendLabels="all", legendWidth=0.5, legendIntervals="page", legendMar = 2 ) )
 
-map_data %>%
+
+# map_data$ADMIN = map_data$country
+# map_data = merge(map_data, countryRegions, by.x = 'ADMIN')
+
+map_data$admin = map_data$country
+world <- ne_countries(scale = "medium", returnclass = "sf")
+sf_dat <- merge(world, map_data, by.x="admin")
+
+sf_dat %>%
+ggplot() +
+  geom_map(dat=world_map, map = world_map,
+           aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
+  geom_sf(aes(fill=change), color = 'black') +
+  scale_fill_binned(breaks = c(-15,-10,-5,0,5,10,15,20),low = 'orange',high = 'blue')+
+  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  theme_light()+
+  ggtitle('Map of GHI Rank Shifts')+
+  ggsave('figs/GHI/ghi_rank_map.png')
+
+
+sf_dat %>%
+  st_drop_geometry() %>%
   select(country, old_scores, new_scores, continent)%>%
   pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
+  filter(!continent %in% c('Oceania', 'Seven seas (open ocean)') ) %>%
   ggplot(aes(continent, values, fill = method ))+
-  geom_split_violin()
+  geom_split_violin(width =1.75,position = position_dodge(.5))+
+  geom_boxplot(width = .1, color = 'white',position = position_dodge(.3))+
+  theme_light()+
+  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+                    labels = c("Optimized", "Original"))+
+  xlab('Continent')+
+  ylab('GHI Score')+
+  ggtitle('GHI Scores Distributions by Weighting Scheme')+
+  scale_x_discrete() +
+  ggsave('figs/GHI/ghi_scores_violin.png')
+
 
 ggplot(rankshifts, aes(x=old_scores, y=new_scores) ) +
   geom_hex(bins = 70) +
