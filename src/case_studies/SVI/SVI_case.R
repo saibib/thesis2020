@@ -32,7 +32,7 @@ svi_scores = agg(voi, voi_impt)
 # 15*agg(voi, voi_impt)['26065004492'] == svi_scores['26065004492']
 #
 
-orig_shap_svi = shapleySubsetMc(X=toi,Y=svi_scores, Ntot = 7500, Ni = 3) # est orginal shapley values
+# orig_shap_svi = shapleySubsetMc(X=toi,Y=svi_scores, Ntot = 7500, Ni = 3) # est orginal shapley values
 orig_shap_svi = sobolshap_knn(agg, toi, method = 'knn', return.shap = T, n.knn=2,
                               randperm = T, n.perm=30, var_wts = toi_impt)
 stats::dist(rbind(orig_shap_svi$shapley,toi_impt)) #euclidean distance difference in importances and shapley values
@@ -59,8 +59,82 @@ optim_wts_svi = res_svi$optim$bestmem/sum(res_svi$optim$bestmem)
 
 wts_v_optim_wts(toi,toi_impt,optim_wts_svi)
 
-svi_optim_scores = agg(svi, var_wts = optim_wts_svi, agg_method = 'ar')
-optim_shap_svi = shapleySubsetMc(X=toi,Y=svi_optim_scores, Ntot = 1500, Ni = 3)
+svi_optim_scores = agg(toi, var_wts = optim_wts_svi, agg_method = 'ar')
+optim_shap_svi = sobolshap_knn(agg, toi, method = 'knn', return.shap = T, n.knn=2,var_wts = optim_wts_svi)
+
+
+#### testing
+data.frame(counties = names(svi_scores), old_scores = svi_scores,
+           optimized_scores = svi_optim_scores)%>%
+  pivot_longer(-counties,names_to="scores", values_to="value") %>%
+  wilcox.test(value ~ scores, data = ., paired = TRUE)
+
+SIGN.test(svi_scores,svi_optim_scores)
+########
+
+
+v1 = names(sort(svi_scores))
+v2 = names(sort(svi_optim_scores))
+
+rankshifts  = data.frame(FIPS = v1,  old_scores = svi_scores[v1],
+                         new_scores =  svi_optim_scores[v1], change = match(v1,v1)-match(v1,v2))
+
+##################### too many counties, maybe take a random sample of them?
+# rankshifts %>%
+#   ggplot(aes(x=reorder(FIPS, -change), y=change)) +
+#   geom_segment( aes(x=reorder(FIPS, -change), xend=reorder(FIPS, -change), y=0, yend=change), color="grey") +
+#   geom_point( color="orange", size=2) +
+#   theme_bw()+
+#   theme(
+#     panel.grid.major.x = element_blank(),
+#     panel.border = element_blank(),
+#     axis.ticks.x = element_blank()
+#   ) +
+#   coord_flip()+
+#   ggtitle('Change in SVI Rank After Applying Optimized Weights')+
+#   xlab("") +
+#   ylab("Change in Rank")+
+#   theme_light()
+#   ggsave( width = 8, height = 12, dpi = 300, filename = "figs/SVI/svi_rank_loli.png")
+
+
+# rankshifts %>%
+#   arrange(-old_scores)%>%
+#   mutate(FIPS = factor(FIPS, FIPS)) %>%
+#   ggplot() +
+#   geom_segment( aes(x=FIPS, xend=FIPS, y=old_scores, yend=new_scores), color="grey") +
+#   geom_point( aes(x=FIPS, y=old_scores), color='lightblue', size=3 ) +
+#   geom_point( aes(x=FIPS, y=new_scores), color='orange', size=3 ) +
+#   coord_flip()+
+#   ggtitle('Change in SVI Scores After Applying Optimized Weights')+
+#   xlab("County (in order of original rank)") +
+#   ylab("SVI Score")+
+#   theme_light()+
+#   # ggsave( width = 9, height = 14, dpi = 300, filename = "figs/GHI/ghi_scores_loli.png")
+
+map_data = merge(rankshifts, tract_info, by.x = 'FIPS') %>%
+  mutate(region = tolower(STATE), subregion = tolower(COUNTY)) %>%
+  select(-c(STATE,COUNTY))
+
+dfips = maps::county.fips %>%
+  extract(polyname, c("region", "subregion"), "^([^,]+),([^,]+)$")
+
+dall = map_data("county") %>%
+  right_join(dfips) %>%
+  right_join(map_data)
+
+
+dall %>%
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill=change)) +
+  geom_polygon( data=map_data("state"), aes(x=long, y=lat, group=group),
+                color="black", fill=NA, size = .5)+
+  scale_fill_binned(breaks = c(-500,-250,0,250,500),low = 'orange',high = 'blue')+
+  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  theme_light()+
+  coord_map()+
+  ggtitle('Map of SVI Rank Shifts')+
+  ggsave('figs/SVI/svi_rank_map.png')
 
 
 
