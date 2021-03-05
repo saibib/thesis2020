@@ -1,6 +1,8 @@
 ghi = read.csv( here('data','GHI','GHI_transformed.csv'))
 ghi = ghi %>% remove_rownames %>% column_to_rownames(var="X")
 
+colnames(ghi) =  c('Undernourishment', 'Child Wasting', 'Child Stunting', 'Child Mortality')
+
 library(corrplot)
 cor.mtest <- function(mat, ...) {
   mat <- as.matrix(mat)
@@ -18,26 +20,38 @@ cor.mtest <- function(mat, ...) {
 }
 p.mat = cor.mtest(ghi)
 
+png(height=800, width=800, filename="figs/GHI/ghi_cor.png")
 cor(ghi, use = 'pairwise') %>%
-  corrplot.mixed(lower = "number", upper = "ellipse",
+corrplot.mixed(lower = "number", upper = "ellipse",
                  tl.col = "black",
                  p.mat = p.mat, sig.level = 0.01, insig = "blank")
+dev.off()
 
 
+colnames(ghi) =  c('Undernourishment', 'Child Wasting', 'Child Stunting', 'Child Mortality')
 ghi %>% tidyr::gather() %>% ggplot(aes(value)) +
   facet_wrap(~ key, scales = "free") + geom_histogram()+
-  theme(axis.text.x = element_text(size = 15))
+  theme(axis.text.x = element_text(size = 15))+
+  xlab('Value')+
+  ylab('Count')+
+  ggtitle('Distribution of GHI Dimension Scores')+
+  theme_minimal()+
+  ggsave('figs/GHI/ghi_eda_hist.png')
 
-cor(cbind(ghi,ghi_scores), use = 'pairwise') %>%
+
+
+df = cbind(ghi[intersect(rownames(ghi), names(ghi_scores)), ],ghi_scores,ghi_optim_scores)
+colnames(df) = c('Undernourishment', 'Child Wasting', 'Child Stunting', 'Child Mortality', 'Original Scores',
+                 'Optimized Scores')
+png(height=1000, width=1000, filename="figs/GHI/ghi_scores_cor.png")
+cor(df, use = 'pairwise') %>%
   corrplot.mixed(lower = "number", upper = "ellipse",
                  tl.col = "black",
-                 p.mat = cor.mtest(cbind(ghi,ghi_scores)), sig.level = 0.01, insig = "blank")
-cor(cbind(ghi,ghi_optim_scores), use = 'pairwise') %>%
-  corrplot.mixed(lower = "number", upper = "ellipse",
-                 tl.col = "black",
-                 p.mat = cor.mtest(cbind(ghi,ghi_optim_scores)), sig.level = 0.01, insig = "blank")
+                 p.mat = cor.mtest(df, sig.level = 0.01, insig = "blank"))
+dev.off()
 
 
+|>|
 # pairs(ghi)
 # library(GGally)
 # ggpairs(ghi, aes(alpha = 0.4),diag = list(discrete = 'barDiag'))
@@ -69,3 +83,5 @@ ghi %>%
   labs(y = "Number of NA's", x = "index") +
   scale_fill_continuous(high = "#132B43", low = "#56B1F7")+
   theme_minimal()
+
+

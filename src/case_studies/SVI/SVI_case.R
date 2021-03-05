@@ -136,5 +136,22 @@ dall %>%
   ggtitle('Map of SVI Rank Shifts')+
   ggsave('figs/SVI/svi_rank_map.png')
 
+# map_data %>%
+#   select(old_scores, new_scores, region) %>%
+#   pivot_longer(-region, names_to = 'method', values_to = 'values') %>%
+#   ggplot(aes(region, values, fill = method ))+
+#   geom_split_violin(width =1.75,position = position_dodge(.5))+
+#   geom_boxplot(width = .1, color = 'white',position = position_dodge(.3))+
+#   theme_light()+
+#   scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+#                     labels = c("Optimized", "Original"))+
+#   xlab('Continent')+
+#   ylab('GHI Score')+
+#   ggtitle('GHI Scores Distributions by Weighting Scheme')+
+#   scale_x_discrete() +
+#   ggsave('figs/SVI/svi_scores_violin.png')
 
-
+ggplot(rankshifts, aes(x=old_scores, y=new_scores) ) +
+  geom_hex(bins = 70) +
+  scale_fill_continuous(type = "viridis") +
+  theme_bw()

@@ -164,6 +164,16 @@ ggplot() +
   ggtitle('Map of GHI Rank Shifts')+
   ggsave('figs/GHI/ghi_rank_map.png')
 
+sf_dat %>%
+  ggplot() +
+  geom_map(dat=world_map, map = world_map,
+           aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
+  geom_sf(aes(fill=old_scores), color = 'black') +
+  scale_fill_binned(breaks = c(0,10,20,30,40),low = 'orange',high = 'blue')+
+  guides(fill = guide_coloursteps(show.limits = F))+
+  theme_light()+
+  ggtitle('Map of GHI Scores')+
+  ggsave('figs/GHI/ghi_old_score_map.png')
 
 sf_dat %>%
   st_drop_geometry() %>%
