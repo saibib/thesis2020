@@ -27,7 +27,7 @@ voi_impt = rep(1/ncol(voi), ncol(voi))
 # toi_impt = c(4/15, 4/15,2/15,5/15)
 toi_impt = rep(1/4,4)
 
-svi_scores = agg(voi, voi_impt)
+svi_scores = (agg(toi, toi_impt))
 
 # 15*agg(voi, voi_impt)['26065004492'] == svi_scores['26065004492']
 #
@@ -35,9 +35,10 @@ svi_scores = agg(voi, voi_impt)
 # orig_shap_svi = shapleySubsetMc(X=toi,Y=svi_scores, Ntot = 7500, Ni = 3) # est orginal shapley values
 orig_shap_svi = sobolshap_knn(agg, toi, method = 'knn', return.shap = T, n.knn=2,
                               randperm = T, n.perm=30, var_wts = toi_impt)
-stats::dist(rbind(orig_shap_svi$shapley,toi_impt)) #euclidean distance difference in importances and shapley values
+stats::dist(rbind(orig_shap_svi$Shap,toi_impt)) #euclidean distance difference in importances and shapley values
 
-desired_v_shapley(toi, toi_impt, orig_shap_svi$shapley) # plot the desired importances vs shapley effects
+desired_v_shapley(toi, toi_impt, as.numeric(orig_shap_svi$Shap)) # plot the desired importances vs shapley effects
+
 
 cl <- makeCluster(detectCores()-1) # set the number of processor cores
 setDefaultCluster(cl=cl)
@@ -61,6 +62,20 @@ wts_v_optim_wts(toi,toi_impt,optim_wts_svi)
 
 svi_optim_scores = agg(toi, var_wts = optim_wts_svi, agg_method = 'ar')
 optim_shap_svi = sobolshap_knn(agg, toi, method = 'knn', return.shap = T, n.knn=2,var_wts = optim_wts_svi)
+
+##########
+
+data.frame(counties = rownames(toi), old_scores = svi_scores,
+           optimized_scores = svi_optim_scores)%>%
+  pivot_longer(-counties,names_to="scores", values_to="value") %>%
+  ggplot(aes(value, fill=scores))+
+  geom_boxplot()
+
+
+
+
+
+
 
 
 #### testing
@@ -136,6 +151,51 @@ dall %>%
   ggtitle('Map of SVI Rank Shifts')+
   ggsave('figs/SVI/svi_rank_map.png')
 
+dall %>%
+  ggplot(aes(long, lat, group = group)) +
+  geom_polygon(aes(fill=old_scores)) +
+  geom_polygon( data=map_data("state"), aes(x=long, y=lat, group=group),
+                color="black", fill=NA, size = .5)+
+  scale_fill_binned(low = 'orange',high = 'blue')+
+  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  theme_light()+
+  coord_map()+
+  ggtitle('Map of SVI Rank Shifts')+
+  ggsave('figs/SVI/svi_score_map.png')
+
+
+state = data.frame(ST_ABBR = state.abb, region_of_us = levels(state.region)[state.region])
+
+dall %>% right_join(state) %>%
+  select(region, old_scores, new_scores, region_of_us)%>%
+  pivot_longer(cols = -c(region, region_of_us), names_to = 'method', values_to = 'values') %>%
+  filter(method == 'old_scores') %>%
+  ggplot(aes(region_of_us, values))+
+  geom_violin(width =1,position = position_dodge(.5), fill = 'lightblue')+
+  geom_boxplot(width = .1,position = position_dodge(.3))+
+  theme_light()+
+  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+                    labels = c("Optimized", "Original"))+
+  xlab('Region of US')+
+  ylab('SVI Score')+
+  ggtitle('SVI Scores Distributions by US Region')+
+  scale_x_discrete() +
+  ggsave('figs/SVI/svi_old_scores_violin.png')
+
+dall %>% right_join(state) %>%
+  select(region, old_scores, new_scores, region_of_us)%>%
+  pivot_longer(cols = -c(region, region_of_us), names_to = 'method', values_to = 'values') %>%
+  ggplot(aes(region_of_us, values, fill = method ))+
+  geom_split_violin(width =1.75,position = position_dodge(.5))+
+  geom_boxplot(width = .2, color = 'white',position = position_dodge(.3))+
+  theme_light()+
+  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+                    labels = c("Optimized", "Original"))+
+  xlab('Continent')+
+  ylab('GHI Score')+
+  ggtitle('GHI Scores Distributions by Weighting Scheme')+
+  scale_x_discrete() +
+  ggsave('figs/GHI/ghi_split_scores_violin.png')
 # map_data %>%
 #   select(old_scores, new_scores, region) %>%
 #   pivot_longer(-region, names_to = 'method', values_to = 'values') %>%

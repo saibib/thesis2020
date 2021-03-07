@@ -175,6 +175,16 @@ ggplot() +
   ggsave('figs/GSMI/gsmi_rank_map.png')
 
 
+sf_dat %>%
+  ggplot() +
+  geom_map(dat=world_map, map = world_map,
+           aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
+  geom_sf(aes(fill=old_scores), color = 'black') +
+  scale_fill_binned(low = 'orange',high = 'blue')+
+  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  theme_light()+
+  ggtitle('Map of GSMI Scores')+
+  ggsave('figs/GSMI/gsmi_score_map.png')
 
 map_data$ADMIN = map_data$country
 map_data = merge(map_data, countryRegions, by.x = 'ADMIN')

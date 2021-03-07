@@ -13,6 +13,6 @@ packages <- c("ggplot2",  "sensitivity", "here", 'stats',
                'votesys', 'DEoptim',  'tidyverse', 'readxl',
               'here', 'igraph', 'dplyr', 'readxl','corrplot','BSDA',
               'rworldmap', 'reactable','htmlwidgets','webshot','scales',
-              'sf', 'rnaturalearth', 'rnaturalearthdata')
+              'sf', 'rnaturalearth', 'rnaturalearthdata', 'ggstance', 'mapdata')
 ipak(packages)
 

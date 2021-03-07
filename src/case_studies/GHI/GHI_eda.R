@@ -28,9 +28,13 @@ corrplot.mixed(lower = "number", upper = "ellipse",
 dev.off()
 
 
-colnames(ghi) =  c('Undernourishment', 'Child Wasting', 'Child Stunting', 'Child Mortality')
-ghi %>% tidyr::gather() %>% ggplot(aes(value)) +
-  facet_wrap(~ key, scales = "free") + geom_histogram()+
+
+ghi %>%
+  tidyr::gather() %>%
+  ggplot(aes(value)) +
+  geom_histogram()+
+  geom_boxploth(aes(y = -3), width =3, color = "orange", lwd = 1, alpha = .5) +
+  facet_wrap(~ key) +
   theme(axis.text.x = element_text(size = 15))+
   xlab('Value')+
   ylab('Count')+

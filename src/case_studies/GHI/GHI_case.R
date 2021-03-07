@@ -169,7 +169,8 @@ sf_dat %>%
   geom_map(dat=world_map, map = world_map,
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=old_scores), color = 'black') +
-  scale_fill_binned(breaks = c(0,10,20,30,40),low = 'orange',high = 'blue')+
+  scale_fill_binned(breaks = c(10,20,35,50),low = 'orange',high = 'blue',
+                    labels = c('10-19.9 Moderate', "20-34.9 Serious", "35-49.9 Alarming",">50 Extremly Alarming"))+
   guides(fill = guide_coloursteps(show.limits = F))+
   theme_light()+
   ggtitle('Map of GHI Scores')+
