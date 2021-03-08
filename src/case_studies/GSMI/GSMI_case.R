@@ -169,8 +169,9 @@ ggplot() +
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=change), color = 'black') +
   scale_fill_binned(breaks = c(-4,-2,0,2,4),low = 'orange',high = 'blue')+
-  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  guides(fill = guide_coloursteps(show.limits = TRUE, title ='Change in Rank', title.position = 'top'))+
   theme_light()+
+  theme(legend.position="bottom")+
   ggtitle('Map of GSMI Rank Shifts')+
   ggsave('figs/GSMI/gsmi_rank_map.png')
 
@@ -181,8 +182,9 @@ sf_dat %>%
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=old_scores), color = 'black') +
   scale_fill_binned(low = 'orange',high = 'blue')+
-  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  guides(fill = guide_coloursteps(title = 'GSMI Score', show.limits = TRUE,title.position = "top"))+
   theme_light()+
+  theme(legend.position="bottom")+
   ggtitle('Map of GSMI Scores')+
   ggsave('figs/GSMI/gsmi_score_map.png')
 

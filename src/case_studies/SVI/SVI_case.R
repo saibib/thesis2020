@@ -157,8 +157,10 @@ dall %>%
   geom_polygon( data=map_data("state"), aes(x=long, y=lat, group=group),
                 color="black", fill=NA, size = .5)+
   scale_fill_binned(low = 'orange',high = 'blue')+
-  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  guides(fill = guide_coloursteps(show.limits = TRUE, title = 'Score', title.position = 'top'))+
   theme_light()+
+  xlab('')+
+  ylab('')+
   coord_map()+
   ggtitle('Map of SVI Rank Shifts')+
   ggsave('figs/SVI/svi_score_map.png')
@@ -192,10 +194,10 @@ dall %>% right_join(state) %>%
   scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   xlab('Continent')+
-  ylab('GHI Score')+
-  ggtitle('GHI Scores Distributions by Weighting Scheme')+
+  ylab('SVI Score')+
+  ggtitle('SVI Scores Distributions by Weighting Scheme')+
   scale_x_discrete() +
-  ggsave('figs/GHI/ghi_split_scores_violin.png')
+  ggsave('figs/SVI/svi_split_scores_violin.png')
 # map_data %>%
 #   select(old_scores, new_scores, region) %>%
 #   pivot_longer(-region, names_to = 'method', values_to = 'values') %>%

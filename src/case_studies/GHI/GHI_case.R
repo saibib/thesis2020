@@ -159,7 +159,7 @@ ggplot() +
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=change), color = 'black') +
   scale_fill_binned(breaks = c(-15,-10,-5,0,5,10,15,20),low = 'orange',high = 'blue')+
-  guides(fill = guide_coloursteps(show.limits = TRUE))+
+  guides(fill = guide_coloursteps(show.limits = TRUE, title ='Shift', title.position = 'top'))+
   theme_light()+
   ggtitle('Map of GHI Rank Shifts')+
   ggsave('figs/GHI/ghi_rank_map.png')
@@ -171,7 +171,7 @@ sf_dat %>%
   geom_sf(aes(fill=old_scores), color = 'black') +
   scale_fill_binned(breaks = c(10,20,35,50),low = 'orange',high = 'blue',
                     labels = c('10-19.9 Moderate', "20-34.9 Serious", "35-49.9 Alarming",">50 Extremly Alarming"))+
-  guides(fill = guide_coloursteps(show.limits = F))+
+  guides(fill = guide_coloursteps(show.limits = F, title ='Score', title.position = 'top'))+
   theme_light()+
   ggtitle('Map of GHI Scores')+
   ggsave('figs/GHI/ghi_old_score_map.png')

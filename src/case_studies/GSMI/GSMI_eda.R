@@ -62,7 +62,8 @@ cor(df, use = 'pairwise') %>%
 dev.off()
 
 
-
+cor(df, use = 'pairwise') %>%
+  corrplot(method = 'sh',type ='lower')
 # pairs(ghi)
 # library(GGally)
 # ggpairs(ghi, aes(alpha = 0.4),diag = list(discrete = 'barDiag'))
