@@ -1,5 +1,5 @@
 
-colnames(ghi) =  c('Undernourishment', 'Child Wasting', 'Child Stunting', 'Child Mortality')
+
 
 library(corrplot)
 cor.mtest <- function(mat, ...) {
@@ -18,38 +18,42 @@ cor.mtest <- function(mat, ...) {
 }
 p.mat = cor.mtest(voi)
 
-png(height=800, width=800, filename="figs/svi/toi_cor.png")
+colnames(voi) = c("Below Poverty","Unemployed", "Income", "No High School", "Age 65>", "Age <17",
+"Age 5+ w/ Disability", "Single-Parent", "Minority", "Poor English", "Multiunit Structures",
+"Mobile Homes", "Crowding", "No Vehicle", "Group Quarters")
+
+png(height=800, width=800, filename="figs/SVI/voi_cor.png")
 cor(voi, use = 'pairwise') %>%
-  corrplot.mixed(lower = "number", upper = "ellipse",
-                 tl.col = "black",
-                 p.mat = p.mat, sig.level = 0.01, insig = "blank")
+  corrplot(method = 'shade')
+
+dev.off()
+colnames(toi) = c("Socioeconomic\nStatus", 'Household\nComposition', 'Minority', 'Housing Type')
+png(height=800, width=800, filename="figs/SVI/toi_cor.png")
+cor(toi, use = 'pairwise') %>%
+  corrplot(method = 'shade')
 dev.off()
 
-
-
-ghi %>%
+voi %>%
   tidyr::gather() %>%
   ggplot(aes(value)) +
   geom_histogram()+
-  geom_boxploth(aes(y = -3), width =3, color = "orange", lwd = 1, alpha = .5) +
+  geom_boxploth(aes(y = -30), width =30, color = "orange", lwd = 1, alpha = .5) +
   facet_wrap(~ key) +
   theme(axis.text.x = element_text(size = 15))+
   xlab('Value')+
   ylab('Count')+
-  ggtitle('Distribution of GHI Dimension Scores')+
+  ggtitle('Distribution of SVI Variables')+
   theme_minimal()+
-  ggsave('figs/GHI/ghi_eda_hist.png')
+  ggsave('figs/SVI/svi_eda_hist.png')
 
 
 
-df = cbind(ghi[intersect(rownames(ghi), names(ghi_scores)), ],ghi_scores,ghi_optim_scores)
+df = cbind(toi,svi_scores,svi_optim_scores)
 colnames(df) = c('Undernourishment', 'Child Wasting', 'Child Stunting', 'Child Mortality', 'Original Scores',
                  'Optimized Scores')
-png(height=1000, width=1000, filename="figs/GHI/ghi_scores_cor.png")
+png(height=1000, width=1000, filename="figs/SVI/svi_scores_cor.png")
 cor(df, use = 'pairwise') %>%
-  corrplot.mixed(lower = "number", upper = "ellipse",
-                 tl.col = "black",
-                 p.mat = cor.mtest(df, sig.level = 0.01, insig = "blank"))
+  corrplot(method = 'shade')
 dev.off()
 
 
