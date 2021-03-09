@@ -87,5 +87,3 @@ ghi %>%
   labs(y = "Number of NA's", x = "index") +
   scale_fill_continuous(high = "#132B43", low = "#56B1F7")+
   theme_minimal()
-
-
