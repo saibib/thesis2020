@@ -164,18 +164,26 @@ ggplot() +
   scale_fill_binned(breaks = c(-15,-10,-5,0,5,10,15,20),low = 'orange',high = 'blue')+
   guides(fill = guide_coloursteps(show.limits = TRUE, title ='Shift', title.position = 'top'))+
   theme_light()+
+  theme(legend.position = 'bottom',
+        legend.key.width = unit(1.3, 'cm'))+ #change legend key width)+
   ggtitle('Map of GHI Rank Shifts')+
   ggsave('figs/GHI/ghi_rank_map.png')
 
+
+cut(sf_dat$old_scores, breaks = c(-Inf, 10, 20, 35,50,Inf),
+    labels  = c('\u2264 9.9 Low', '10-19.9 Moderate', "20-34.9 Serious", "35-49.9 Alarming","\u2265 50 Extremly Alarming"))
 sf_dat %>%
+  mutate(category = cut(sf_dat$old_scores, breaks = c(-Inf, 10, 20, 35,50,Inf),
+                        labels  = c('\u2264 9.9 Low', '10-19.9 Moderate',
+                                    "20-34.9 Serious", "35-49.9 Alarming","\u2265 50 Extremly Alarming"))) %>%
   ggplot() +
   geom_map(dat=world_map, map = world_map,
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
-  geom_sf(aes(fill=old_scores), color = 'black') +
-  scale_fill_binned(breaks = c(10,20,35,50),low = 'orange',high = 'blue',
-                    labels = c('10-19.9 Moderate', "20-34.9 Serious", "35-49.9 Alarming",">50 Extremly Alarming"))+
-  guides(fill = guide_coloursteps(show.limits = F, title ='Score', title.position = 'top'))+
+  geom_sf(aes(fill=category), color = 'black') +
+  scale_fill_discrete(name = 'Category')+
+  # guides(fill = guide_coloursteps(show.limits = F, title ='Score', title.position = 'top'))+
   theme_light()+
+  theme(legend.position = 'bottom')+
   ggtitle('Map of GHI Scores')+
   ggsave('figs/GHI/ghi_old_score_map.png')
 
