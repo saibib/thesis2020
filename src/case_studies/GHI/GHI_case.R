@@ -57,7 +57,7 @@ v2 = names(sort(ghi_optim_scores[ghi_optim_scores>0]))
 
 # - https://stackoverflow.com/questions/25781284/simplest-way-to-plot-changes-in-ranking-between-two-ordered-lists-in-r
 
-plotRanks(v1,v2,labels.offset = .5)
+# plotRanks(v1,v2,labels.offset = .5)
 
 
 match(v1,v1)-match(v1,v2)
@@ -170,8 +170,6 @@ ggplot() +
   ggsave('figs/GHI/ghi_rank_map.png')
 
 
-cut(sf_dat$old_scores, breaks = c(-Inf, 10, 20, 35,50,Inf),
-    labels  = c('\u2264 9.9 Low', '10-19.9 Moderate', "20-34.9 Serious", "35-49.9 Alarming","\u2265 50 Extremly Alarming"))
 sf_dat %>%
   mutate(category = cut(sf_dat$old_scores, breaks = c(-Inf, 10, 20, 35,50,Inf),
                         labels  = c('\u2264 9.9 Low', '10-19.9 Moderate',
@@ -202,10 +200,60 @@ sf_dat %>%
   xlab('Continent')+
   ylab('GHI Score')+
   coord_flip()+
-  annotate("text", x=5.15, y=28, label= "Blue: GHI Scores using Original Weights", size = 3) +
-  annotate("text", x=4.85, y=29, label= "Orange: GHI Scores using Optimized Weights", size = 3) +
+  annotate("text", x=5.15, y=28, label= "Blue: GHI Scores using Original Weights", size = 2.5) +
+  annotate("text", x=4.85, y=29, label= "Orange: GHI Scores using Optimized Weights", size = 2.5) +
   ggtitle('GHI Scores Distributions by Weighting Scheme')+
   ggsave('figs/GHI/ghi_scores_violin.png')
+
+
+d1 = sf_dat %>%
+  st_drop_geometry() %>%
+  select(country, old_scores, new_scores, continent)%>%
+  pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
+  filter(!continent %in% c('Oceania', 'Seven seas (open ocean)') )
+
+d2 = sf_dat %>%
+  st_drop_geometry() %>%
+  select(country, old_scores, new_scores, continent)%>%
+  pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
+  mutate(continent = 'World')
+
+p2 = d2 %>%
+  ggplot(aes(continent, values, fill = method ))+
+  geom_split_violin(color='lightgray')+
+  geom_boxplot(width = .1, color = 'black',position = position_dodge(.3))+
+  theme_light()+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+                    labels = c("Optimized", "Original"))+
+  xlab('')+
+  ylab('GSMI Score')+
+  ggtitle(' ')+
+  coord_flip()
+
+
+p1 = d1 %>%
+  ggplot(aes(continent, values, fill = method ))+
+  geom_split_violin(width =1.75,position = position_dodge(.5), color = 'lightgray')+
+  geom_boxplot(width = .1, color = 'black',position = position_dodge(.3))+
+  theme_light()+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+                    labels = c("Optimized", "Original"))+
+  xlab('Continent')+
+  ylab('GSMI Score')+
+  coord_flip()+
+  annotate("text", x=5.15, y=28, label= "Blue: GHI Scores using Original Weights", size = 4) +
+  annotate("text", x=4.85, y=29, label= "Orange: GHI Scores using Optimized Weights", size = 4) +
+  ggtitle('GHI Scores Distributions by Weighting Scheme')+
+  ggsave('figs/GHI/ghi_scores_violin.png')
+
+png('figs/GHI/ghi_violins.png',width = 1600, height = 800  )
+grid.arrange(p1,p2,nrow =1 )
+dev.off()
+
+
+
 
 tmp_df = sf_dat %>%
   st_drop_geometry() %>%

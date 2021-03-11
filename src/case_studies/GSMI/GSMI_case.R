@@ -39,7 +39,7 @@ stats::dist(rbind(orig_shap_gsmi$shapley,importances)) #euclidean distance diffe
 
 sobolshap_knn(agg, gsmi, method = 'knn', return.shap = T, n.knn=2, randperm = T, n.perm=100, var_wts = gsmi_impt)
 
-desired_v_shapley(gsmi, gsmi_impt, orig_shap_gsmi$shapley) # plot the desired importances vs shapley effects
+ # plot the desired importances vs shapley effects
 
 
 cl <- makeCluster(detectCores()-1) # set the number of processor cores
@@ -58,16 +58,22 @@ setDefaultCluster(cl=NULL); stopCluster(cl)
 
 # gsmi_optim_wts = gsmi_res$optim$bestmem/sum(gsmi_res$optim$bestmem)
 
-wts_v_optim_wts(gsmi,gsmi_impt,gsmi_optim_wts)
-
 gsmi_optim_scores = agg(gsmi, var_wts = gsmi_optim_wts, agg_method = 'ar')
-optim_shap_gsmi = shapleySubsetMc(X=gsmi,Y=gsmi_optim_scores, Ntot = 1500, Ni = 3)
+optim_shap_gsmi = shapleySubsetMc(X=gsmi,Y=gsmi_optim_scores, Ntot = 5000, Ni = 3)
 
+wts_v_optim_wts(gsmi,gsmi_impt,gsmi_optim_wts)+
+  ggtitle('Dimension Weights for GSMI')+
+  ggsave('figs/GSMI/gsmi_weights.png')
+
+desired_v_shapley(gsmi, gsmi_impt, orig_shap_gsmi$shapley, optim_shap_gsmi$shapley)+
+  ggtitle('Dimension Importances for GSMI')+
+  theme(legend.position = 'bottom')+
+  ggsave('figs/GSMI/gsmi_dim_impt.png', height  = 5, width = 10, units = 'in')
 
 v1 = names(sort(gsmi_scores))
 v2 = names(sort(gsmi_optim_scores))
 
-plotRanks(v1,v2,labels.offset = .5)
+# plotRanks(v1,v2,labels.offset = .5)
 
 SIGN.test(gsmi_scores,gsmi_optim_scores)
 
@@ -76,36 +82,36 @@ SIGN.test(gsmi_scores,gsmi_optim_scores)
 rankshifts  = data.frame(country = as.factor(v1),  old_scores =gsmi_scores[as.factor(v1)],
                          new_scores =  gsmi_optim_scores[as.factor(v1)], change = match(v1,v1)-match(v1,v2))
 
-rankshifts %>%
-ggplot(aes(x=reorder(country, -change), y=change)) +
-  geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
-  geom_point( color="orange", size=2) +
-  theme_bw()+
-  theme(
-    panel.grid.major.x = element_blank(),
-    panel.border = element_blank(),
-    axis.ticks.x = element_blank()
-  ) +
-  coord_flip()+
-  ggtitle('Change in GSMI Rank After Applying Optimized Weights')+
-  xlab("") +
-  ylab("Change in Rank")+
-  theme_light()+
-  ggsave(width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_ranks_loli.png")
+# rankshifts %>%
+# ggplot(aes(x=reorder(country, -change), y=change)) +
+#   geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
+#   geom_point( color="orange", size=2) +
+#   theme_bw()+
+#   theme(
+#     panel.grid.major.x = element_blank(),
+#     panel.border = element_blank(),
+#     axis.ticks.x = element_blank()
+#   ) +
+#   coord_flip()+
+#   ggtitle('Change in GSMI Rank After Applying Optimized Weights')+
+#   xlab("") +
+#   ylab("Change in Rank")+
+#   theme_light()+
+#   ggsave(width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_ranks_loli.png")
 
-rankshifts %>%
-  arrange(old_scores)%>%
-  mutate(country = factor(country, country)) %>%
-  ggplot() +
-  geom_segment( aes(x=country, xend=country, y=old_scores, yend=new_scores), color="grey") +
-  geom_point( aes(x=country, y=old_scores), color='lightblue', size=3 ) +
-  geom_point( aes(x=country, y=new_scores), color='orange', size=3 ) +
-  coord_flip()+
-  ggtitle('Change in GSMI Scores After Applying Optimized Weights')+
-  xlab("Country (in order of original rank)") +
-  ylab("Composite Score")+
-  theme_light()+
-  ggsave( width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_scores_loli.png")
+# rankshifts %>%
+#   arrange(old_scores)%>%
+#   mutate(country = factor(country, country)) %>%
+#   ggplot() +
+#   geom_segment( aes(x=country, xend=country, y=old_scores, yend=new_scores), color="grey") +
+#   geom_point( aes(x=country, y=old_scores), color='lightblue', size=3 ) +
+#   geom_point( aes(x=country, y=new_scores), color='orange', size=3 ) +
+#   coord_flip()+
+#   ggtitle('Change in GSMI Scores After Applying Optimized Weights')+
+#   xlab("Country (in order of original rank)") +
+#   ylab("Composite Score")+
+#   theme_light()+
+#   ggsave( width = 8, height = 10, dpi = 300, filename = "figs/GSMI/gsmi_scores_loli.png")
 
 
 # install.packages('reactable')
@@ -184,28 +190,60 @@ sf_dat %>%
   scale_fill_binned(low = 'orange',high = 'blue')+
   guides(fill = guide_coloursteps(title = 'GSMI Score', show.limits = TRUE,title.position = "top"))+
   theme_light()+
-  theme(legend.position="bottom")+
+  theme(legend.position="bottom",
+        legend.key.width = unit(1.3, 'cm'))+
   ggtitle('Map of GSMI Scores')+
   ggsave('figs/GSMI/gsmi_score_map.png')
 
 map_data$ADMIN = map_data$country
 map_data = merge(map_data, countryRegions, by.x = 'ADMIN')
 
-sf_dat %>%
+
+d1 = sf_dat %>%
   st_drop_geometry() %>%
   select(country, old_scores, new_scores, continent)%>%
   pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
-  filter(!continent %in% c('Oceania') ) %>%
+  filter(!continent %in% c('Oceania') )
+
+d2 = sf_dat %>%
+  st_drop_geometry() %>%
+  select(country, old_scores, new_scores, continent)%>%
+  pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
+  mutate(continent = 'World')
+
+p2 = d2 %>%
   ggplot(aes(continent, values, fill = method ))+
-  geom_split_violin()+
-  geom_boxplot(width = .1, color = 'white',position = position_dodge(.3))+
+  geom_split_violin(color='lightgray')+
+  geom_boxplot(width = .1, color = 'black',position = position_dodge(.3))+
   theme_light()+
+  theme(legend.position = "none")+
+  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+                    labels = c("Optimized", "Original"))+
+  xlab('')+
+  ylab('GSMI Score')+
+  ggtitle(' ')+
+  coord_flip()
+
+
+p1 = d1 %>%
+  ggplot(aes(continent, values, fill = method ))+
+  geom_split_violin(color='lightgray')+
+  geom_boxplot(width = .1, color = 'black',position = position_dodge(.3))+
+  theme_light()+
+  theme(legend.position = "none")+
   scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   xlab('Continent')+
-  ylab('Composite Score')+
+  ylab('GSMI Score')+
+  coord_flip()+
+  annotate("text", x=5.25, y=40, label= "Blue: GSMI Scores\nusing Original Weights", size = 3) +
+  annotate("text", x=4.75, y=40, label= "Orange: GSMI Scores\nusing Optimized Weights", size = 3) +
   ggtitle('GSMI Scores Distributions by Weighting Scheme')+
   ggsave('figs/GSMI/gsmi_scores_violin.png')
+
+png('figs/GSMI/gsmi_violins.png',width = 1200, height = 600  )
+grid.arrange(p1,p2,nrow =1 )
+dev.off()
 
 # map_data %>%
 #   select(old_scores, new_scores, continent)%>%
@@ -219,7 +257,41 @@ sf_dat %>%
 #   xlab("") +
 #   ylab("Value of Y")
 
-ggplot(rankshifts, aes(x=old_scores, y=new_scores) ) +
-  geom_hex(bins = 70) +
-  scale_fill_continuous(type = "viridis") +
-  theme_bw()
+tmp_df = sf_dat %>%
+  st_drop_geometry() %>%
+  select(country, old_scores, new_scores, continent, change)%>%
+  filter(!continent %in% c('Seven seas (open ocean)') )
+
+p1 = ggplot()+
+  geom_point(data = tmp_df, aes(old_scores, new_scores, shape = continent, color = continent),
+             size = 3, alpha = .6)+
+  # geom_point(data = tmp2_df,
+  #            aes(old_avg, new_avg, shape = continent, color = continent), size = 5)+
+  geom_abline(slope=1, intercept = 0,linetype = 'dashed', alpha =.5)+
+  theme_light()+
+  xlab('Original Scores')+
+  ylab('Optimized Scores')+
+  ggtitle('Optimized vs. Original GHI Scores\n')+
+  theme(legend.position= c(.8,.15))+
+  scale_color_discrete(name = 'Continent')+
+  scale_shape_discrete(name = 'Continent')
+
+p2 = tmp_df %>%
+  mutate(diff = (new_scores - old_scores)/old_scores) %>%
+  group_by(continent) %>%
+  summarise(mean_diff = mean(diff), mean_old = mean(old_scores))%>%
+  ggplot(aes(mean_old, mean_diff, color =continent, shape = continent))+
+  geom_point(size = 4)+
+  geom_hline(yintercept = 0, alpha =.5)+
+  geom_hline(yintercept = .05, linetype = 'dashed', alpha =.5)+
+  geom_hline(yintercept = -.05, linetype = 'dashed', alpha =.5)+
+  xlab('Average Original Score')+
+  ylab('Percent Difference')+
+  ggtitle('Average Percent Difference Between\nOptimized and Original Scores')+
+  theme_light()+
+  scale_color_discrete(guide = F)+
+  scale_shape_discrete(guide = F)
+
+png('figs/GSMI/gsmi_scatter.png',width = 1200, height = 600  )
+grid.arrange(p1,p2,nrow =1 )
+dev.off()

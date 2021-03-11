@@ -4,7 +4,7 @@ desired_v_shapley = function(df, desired_impt, shapley_values,optim_shapley){
     ggplot(aes(variable,value,fill = impt)) +
     geom_bar(stat = "identity",position=position_dodge())+
     geom_text(aes(label=round(value,2)), vjust=1.6, color = 'white',
-              position = position_dodge(.9), size=3.5)+
+              position = position_dodge(.9), size=3)+
     xlab('Dimension')+
     ylab('Importance')+
     theme_light()+
