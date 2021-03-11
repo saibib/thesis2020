@@ -188,11 +188,14 @@ sf_dat %>%
   geom_split_violin(width =1.75,position = position_dodge(.5), color = 'lightgray')+
   geom_boxplot(width = .2, color = 'black',position = position_dodge(.3))+
   theme_light()+
-  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+  scale_fill_manual(values = c("orange", "lightblue"),
                     labels = c("Optimized", "Original"))+
+  theme(legend.position = "none")+
   xlab('Continent')+
   ylab('GHI Score')+
   coord_flip()+
+  annotate("text", x=5.15, y=28, label= "Blue: GHI Scores using Original Weights", size = 3) +
+  annotate("text", x=4.85, y=29, label= "Orange: GHI Scores using Optimized Weights", size = 3) +
   ggtitle('GHI Scores Distributions by Weighting Scheme')+
   ggsave('figs/GHI/ghi_scores_violin.png')
 
