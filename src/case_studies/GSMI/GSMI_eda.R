@@ -25,11 +25,12 @@ firstup <- function(x) {
 colnames(gsmi) = firstup(gsub("_", "\n", colnames(gsmi)))
 
 
-png(height=1100, width=1100, filename="figs/GSMI/gsmi_cor.png")
+
+png(height=2100, width=2100, filename="figs/GSMI/gsmi_cor.png")
 cor(gsmi, use = 'pairwise') %>%
   corrplot.mixed(lower = "number", upper = "ellipse",
-                 tl.col = "black",
-                 p.mat = p.mat, sig.level = 0.01, insig = "blank",cl.cex = 2)
+                 tl.col = "black", tl.cex = 2,
+                 cl.cex = 2, number.cex = 2)
 dev.off()
 
 
@@ -54,11 +55,11 @@ df = cbind(gsmi,gsmi_scores,gsmi_optim_scores)
 colnames(df) = firstup(gsub("_", " ", colnames(df)))
 colnames(df) = gsub(' ', '\n', colnames(df))
 
-png(height=1200, width=1200, filename="figs/GSMI/gsmi_scores_cor.png")
+png(height=1400, width=1400, filename="figs/GSMI/gsmi_scores_cor.png")
 cor(df, use = 'pairwise') %>%
   corrplot.mixed(lower = "number", upper = "ellipse",
-                 tl.col = "black",
-                 p.mat = cor.mtest(df), sig.level = 0.01, insig = "blank",cl.cex = 2)
+                 tl.col = "black", tl.cex = 1.5,
+                 cl.cex = 2)
 dev.off()
 
 

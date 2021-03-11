@@ -23,8 +23,6 @@ orig_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_scores, Ntot = 1500, Ni = 3) # est o
 stats::dist(rbind(orig_shap_ghi$shapley,importances)) #euclidean distance difference in importances and shapley values
 
 
-desired_v_shapley(ghi, importances, orig_shap_ghi$shapley) # plot the desired importances vs shapley effects
-
 
 cl <- makeCluster(detectCores()-1) # set the number of processor cores
 setDefaultCluster(cl=cl)
@@ -43,10 +41,16 @@ setDefaultCluster(cl=NULL); stopCluster(cl)
 
 optim_wts = res$optim$bestmem/sum(res$optim$bestmem)
 
-wts_v_optim_wts(ghi,importances,optim_wts)
-
 ghi_optim_scores = agg(ghi, var_wts = optim_wts, agg_method = 'ar')
 optim_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_optim_scores, Ntot = 1500, Ni = 3)
+
+wts_v_optim_wts(ghi,importances,optim_wts)+
+  ggtitle('Dimension Weights for GHI')+
+  ggsave('figs/GHI/ghi_weights.png')
+
+desired_v_shapley(ghi, importances, orig_shap_ghi$shapley,optim_shap_ghi$shapley)+
+  ggtitle('Dimension Importances for GHI')+
+  ggsave('figs/GHI/ghi_dim_impt.png')
 
 v1 = names(sort(ghi_scores[ghi_scores>0]))
 v2 = names(sort(ghi_optim_scores[ghi_optim_scores>0]))
@@ -81,22 +85,21 @@ ghi_scores = ghi_scores[ghi_scores>0]
 ghi_optim_scores = ghi_optim_scores[ghi_optim_scores>0]
 rankshifts  = data.frame(country = as.factor(v1),  old_scores = ghi_scores[as.factor(v1)],
                          new_scores =  ghi_optim_scores[as.factor(v1)], change = match(v1,v1)-match(v1,v2))
-rankshifts %>%
-  ggplot(aes(x=reorder(country, -change), y=change)) +
-  geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
-  geom_point( color="orange", size=2) +
-  theme_bw()+
-  theme(
-    panel.grid.major.x = element_blank(),
-    panel.border = element_blank(),
-    axis.ticks.x = element_blank()
-  ) +
-  coord_flip()+
-  ggtitle('Change in GHI Rank After Applying Optimized Weights')+
-  xlab("") +
-  ylab("Change in Rank")+
-  theme_light()+
-  ggsave( width = 8, height = 12, dpi = 300, filename = "figs/GHI/ghi_rank_loli.png")
+# rankshifts %>%
+#   ggplot(aes(x=reorder(country, -change), y=change)) +
+#   geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
+#   geom_point( color="orange", size=2) +
+#   theme_bw()+
+#   theme(
+#     panel.grid.major.x = element_blank(),
+#     panel.border = element_blank(),
+#     axis.ticks.x = element_blank()
+#   ) +
+#   coord_flip()+
+#   ggtitle('Change in GHI Rank After Applying Optimized Weights')+
+#   xlab("") +
+#   ylab("Change in Rank")+
+#   theme_light()
 
 
 rankshifts %>%
@@ -182,17 +185,77 @@ sf_dat %>%
   pivot_longer(cols = -c(country, continent), names_to = 'method', values_to = 'values') %>%
   filter(!continent %in% c('Oceania', 'Seven seas (open ocean)') ) %>%
   ggplot(aes(continent, values, fill = method ))+
-  geom_split_violin(width =1.75,position = position_dodge(.5))+
-  geom_boxplot(width = .1, color = 'white',position = position_dodge(.3))+
+  geom_split_violin(width =1.75,position = position_dodge(.5), color = 'lightgray')+
+  geom_boxplot(width = .2, color = 'black',position = position_dodge(.3))+
   theme_light()+
   scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   xlab('Continent')+
   ylab('GHI Score')+
+  coord_flip()+
   ggtitle('GHI Scores Distributions by Weighting Scheme')+
-  scale_x_discrete() +
   ggsave('figs/GHI/ghi_scores_violin.png')
 
+tmp_df = sf_dat %>%
+  st_drop_geometry() %>%
+  select(country, old_scores, new_scores, continent, change)%>%
+  filter(!continent %in% c('Seven seas (open ocean)') )
+tmp2_df = tmp_df %>%
+  group_by(continent) %>%
+  summarize(old_avg = mean(old_scores),new_avg = mean(new_scores))
+
+p1 = ggplot()+
+  geom_point(data = tmp_df, aes(old_scores, new_scores, shape = continent, color = continent),
+             size = 3, alpha = .6)+
+  # geom_point(data = tmp2_df,
+  #            aes(old_avg, new_avg, shape = continent, color = continent), size = 5)+
+  geom_abline(slope=1, intercept = 0,linetype = 'dashed', alpha =.5)+
+  theme_light()+
+  xlab('Original Scores')+
+  ylab('Optimized Scores')+
+  ggtitle('Optimized vs. Original GHI Scores\n')+
+  theme(legend.position= c(.8,.15))+
+  scale_color_discrete(name = 'Continent')+
+  scale_shape_discrete(name = 'Continent')
+
+
+p2 = tmp_df %>%
+  mutate(diff = (new_scores - old_scores)/old_scores) %>%
+  group_by(continent) %>%
+  summarise(mean_diff = mean(diff), mean_old = mean(old_scores))%>%
+  ggplot(aes(mean_old, mean_diff, color =continent, shape = continent))+
+    geom_point(size = 4)+
+  geom_hline(yintercept = 0, alpha =.5)+
+  geom_hline(yintercept = .1, linetype = 'dashed', alpha =.5)+
+  geom_hline(yintercept = -.1, linetype = 'dashed', alpha =.5)+
+  xlab('Average Original Score')+
+  ylab('Percent Difference')+
+  ggtitle('Average Percent Difference Between\nOptimized and Original Scores')+
+  theme_light()+
+  scale_color_discrete(guide = F)+
+  scale_shape_discrete(guide = F)
+
+png('figs/GHI/ghi_scatter.png',width = 1200, height = 600  )
+grid.arrange(p1,p2,nrow =1 )
+dev.off()
+
+tmp_df %>%
+  ggplot(aes(x=reorder(country, -change), y=change, color = continent)) +
+  geom_segment( aes(x=reorder(country, -change), xend=reorder(country, -change), y=0, yend=change), color="grey") +
+  geom_point( size=2) +
+  theme_bw()+
+  theme(
+    panel.grid.major.x = element_blank(),
+    panel.border = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+  coord_flip()+
+  ggtitle('Change in GHI Rank After Applying Optimized Weights')+
+  xlab("") +
+  ylab("Change in Rank")+
+  theme_light()+
+  scale_color_discrete(name = 'Continent')+
+  ggsave( width = 8, height = 12, dpi = 300, filename = "figs/GHI/ghi_rank_loli.png")
 
 ggplot(rankshifts, aes(x=old_scores, y=new_scores) ) +
   geom_hex(bins = 70) +

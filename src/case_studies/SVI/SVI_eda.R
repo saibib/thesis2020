@@ -24,14 +24,27 @@ colnames(voi) = c("Below Poverty","Unemployed", "Income", "No High School", "Age
 
 png(height=800, width=800, filename="figs/SVI/voi_cor.png")
 cor(voi, use = 'pairwise') %>%
-  corrplot(method = 'shade')
+  corrplot(method = 'shade', tl.col ='black', tl.cex = 1.5, cl.cex = 1.5)
 
 dev.off()
-colnames(toi) = c("Socioeconomic\nStatus", 'Household\nComposition', 'Minority', 'Housing Type')
+colnames(toi) = c("Socioeconomic\nStatus", 'Household\nComposition', 'Minority Status\n& Language', 'Housing Type')
 png(height=800, width=800, filename="figs/SVI/toi_cor.png")
 cor(toi, use = 'pairwise') %>%
-  corrplot(method = 'shade')
+  corrplot(method = 'shade',tl.col = "black", tl.cex = 1.5, cl.cex = 1.5,cl.pos="n")
 dev.off()
+
+png(height=900, width=1600, file="figs/SVI/combined_cor.png")
+par(mfrow = c(1,2))
+cor(voi, use = 'pairwise') %>%
+  corrplot(method = 'shade', tl.col ='black', tl.cex = 1.5, cl.cex = 1.5,
+             mar=c(0,0,5,0),cl.pos="b")
+title('Variable Correlations', cex.main =3)
+cor(toi, use = 'pairwise') %>%
+  corrplot(method = 'shade',tl.col = "black", tl.cex = 1.5, cl.cex = 1.5,
+             mar=c(3,0,3,3), cl.pos="b")
+title('Dimension Correlations', cex.main = 3)
+dev.off()
+
 
 voi %>%
   tidyr::gather() %>%

@@ -1,8 +1,15 @@
-desired_v_shapley = function(df, desired_impt, shapley_values){
-  data.frame(variable = colnames(df),desired = desired_impt, shapley = shapley_values) %>%
+desired_v_shapley = function(df, desired_impt, shapley_values,optim_shapley){
+  data.frame(variable = colnames(df),desired = desired_impt, e_shapley = shapley_values, optimized = optim_shapley) %>%
     pivot_longer( -variable, names_to="impt", values_to="value") %>%
-    ggplot(aes(variable,value)) +
-    geom_bar(aes(fill = impt),stat = "identity",position = "dodge")
+    ggplot(aes(variable,value,fill = impt)) +
+    geom_bar(stat = "identity",position=position_dodge())+
+    geom_text(aes(label=round(value,2)), vjust=1.6, color = 'white',
+              position = position_dodge(.9), size=3.5)+
+    xlab('Dimension')+
+    ylab('Importance')+
+    theme_light()+
+    scale_fill_discrete(name = "Importance",
+                        labels = c("Desired", "Original\nShapley\nEffect","Optimized\nShapley\nEffect"))
 }
 
 
@@ -10,8 +17,15 @@ wts_v_optim_wts = function(df, old_weights, optim_wts){
   data.frame(variable = colnames(df),old_weights = old_weights,
              optimized_weights = optim_wts) %>%
     pivot_longer( -variable, names_to="weight", values_to="value") %>%
-    ggplot(aes(variable,value)) +
-    geom_bar(aes(fill = weight),stat = "identity",position = "dodge")
+    ggplot(aes(variable,value, fill = weight)) +
+    geom_bar(stat = "identity",position = position_dodge())+
+    geom_text(aes(label=round(value,2)), vjust=1.6, color = 'white',
+              position = position_dodge(.9), size=3.5)+
+    xlab('Dimension')+
+    ylab('Weight')+
+    theme_light()+
+    scale_fill_discrete(name = "Weights",
+                        labels = c("Original", "Optimized"))
 }
 
 plotRanks <- function(a, b, labels.offset=0.1, arrow.len=0.1)

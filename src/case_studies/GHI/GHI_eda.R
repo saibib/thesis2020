@@ -1,7 +1,7 @@
 ghi = read.csv( here('data','GHI','GHI_transformed.csv'))
 ghi = ghi %>% remove_rownames %>% column_to_rownames(var="X")
 
-colnames(ghi) =  c('Undernourishment', 'Child Wasting', 'Child Stunting', 'Child Mortality')
+colnames(ghi) =  c('Under-\nnourishment', 'Child\nWasting', 'Child\nStunting', 'Child\nMortality')
 
 library(corrplot)
 cor.mtest <- function(mat, ...) {
@@ -23,8 +23,8 @@ p.mat = cor.mtest(ghi)
 png(height=800, width=800, filename="figs/GHI/ghi_cor.png")
 cor(ghi, use = 'pairwise') %>%
 corrplot.mixed(lower = "number", upper = "ellipse",
-                 tl.col = "black",
-                 p.mat = p.mat, sig.level = 0.01, insig = "blank")
+                 tl.col = "black", number.cex= 1.5,
+               tl.cex=1.5, cl.cex = 1.5)
 dev.off()
 
 

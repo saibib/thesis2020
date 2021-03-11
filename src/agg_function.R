@@ -19,7 +19,7 @@ agg = function(X, var_wts = NULL, agg_method = c('ar', 'geom')){
   }
   if(agg_method == 'geom'){
     tmp = X %*% diag(var_wts) # multiply by column weights
-    scores = apply(tmp, 1, function(x) prod(x, na.rm = T)) # row product
+    scores = apply(tmp, 1, function(x) prod(x, na.rm = T)^(1/ncol(tmp))) # row product
   }
   return(scores)
 }
