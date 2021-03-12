@@ -81,6 +81,8 @@ data.frame(countries = names(ghi_scores[ghi_scores>0]), old_scores = ghi_scores[
 
 SIGN.test(ghi_scores[ghi_scores>0],ghi_optim_scores[ghi_optim_scores>0])
 
+ks.test(ghi_scores[ghi_scores>0],ghi_optim_scores[ghi_optim_scores>0])
+
 ghi_scores = ghi_scores[ghi_scores>0]
 ghi_optim_scores = ghi_optim_scores[ghi_optim_scores>0]
 rankshifts  = data.frame(country = as.factor(v1),  old_scores = ghi_scores[as.factor(v1)],

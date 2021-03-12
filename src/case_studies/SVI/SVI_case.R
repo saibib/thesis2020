@@ -62,8 +62,16 @@ wts_v_optim_wts(toi,toi_impt,optim_wts_svi)
 svi_optim_scores = 4*agg(toi, var_wts = optim_wts_svi, agg_method = 'ar')
 optim_shap_svi = sobolshap_knn(agg, toi, method = 'knn', return.shap = T, n.knn=10,var_wts = optim_wts_svi)
 
+wts_v_optim_wts(toi,toi_impt,optim_wts_svi)+
+  ggtitle('Dimension Weights for SVI')+
+  theme(legend.position = 'bottom')+
+  ggsave('figs/SVI/svi_weights.png')
+
 desired_v_shapley(toi, toi_impt, as.numeric(orig_shap_svi$Shap),
-                  as.numeric(optim_shap_svi$Shap)) # plot the desired importances vs shapley effects
+                  as.numeric(optim_shap_svi$Shap))+
+  ggtitle('Dimension Importances for SVI')+
+  theme(legend.position = 'bottom')+
+  ggsave('figs/SVI/svi_dim_impt.png')# plot the desired importances vs shapley effects
 
 ##########
 
