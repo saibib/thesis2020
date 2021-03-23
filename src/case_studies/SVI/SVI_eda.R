@@ -36,11 +36,11 @@ dev.off()
 png(height=900, width=1600, file="figs/SVI/combined_cor.png")
 par(mfrow = c(1,2))
 cor(voi, use = 'pairwise') %>%
-  corrplot(method = 'shade', tl.col ='black', tl.cex = 1.5, cl.cex = 1.5,
+  corrplot(method = 'shade', tl.col ='black', tl.cex = 2, cl.cex = 1.75,
              mar=c(0,0,5,0),cl.pos="b")
 title('Variable Correlations', cex.main =3)
 cor(toi, use = 'pairwise') %>%
-  corrplot(method = 'shade',tl.col = "black", tl.cex = 1.5, cl.cex = 1.5,
+  corrplot(method = 'shade',tl.col = "black", tl.cex = 2, cl.cex = 1.5,
              mar=c(3,0,3,3), cl.pos="b")
 title('Dimension Correlations', cex.main = 3)
 dev.off()

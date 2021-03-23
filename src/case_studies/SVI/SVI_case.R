@@ -156,8 +156,10 @@ dall %>%
   geom_polygon(aes(fill=change)) +
   geom_polygon( data=map_data("state"), aes(x=long, y=lat, group=group),
                 color="black", fill=NA, size = .5)+
-  scale_fill_binned(breaks = c(-500,-250,0,250,500,750,1000),low = 'orange',high = 'blue',
-                    name = 'SVI Score')+
+  # scale_fill_binned(breaks = c(-500,-250,0,250,500,750,1000),low = 'orange',high = 'blue',
+  #                   name = 'SVI Score')+
+  scale_fill_viridis(name = 'Shift',option = 'A',direction = -1,breaks = c(-500,-250,0,250,500,750,1000),
+                     begin = .2, end =.8)+
   guides(fill = guide_coloursteps(show.limits = F,title.position = 'top'))+
   theme_light()+
   theme(legend.position="bottom",
@@ -176,7 +178,7 @@ dall %>%
   geom_polygon(aes(fill=old_scores)) +
   geom_polygon( data=map_data("state"), aes(x=long, y=lat, group=group),
                 color="black", fill=NA, size = .5)+
-  scale_fill_binned(low = 'orange',high = 'blue')+
+  scale_fill_stepsn(n.breaks = 6, colors = viridis_pal(option = "A", direction = -1,begin = .2, end  = .8)(6))+
   guides(fill = guide_coloursteps(show.limits = TRUE, title = 'SVI Score', title.position = 'top'))+
   theme_light()+
   theme(legend.position = 'bottom',
@@ -198,7 +200,7 @@ dall %>%
   geom_polygon(aes(fill=diff)) +
   geom_polygon( data=map_data("state"), aes(x=long, y=lat, group=group),
                 color="black", fill=NA, size = .5)+
-  scale_fill_binned(low = 'orange',high = 'blue')+
+  scale_fill_stepsn(n.breaks = 6, colors = viridis_pal(option = "A", direction = -1,begin = .2, end  = .8)(6))+
   guides(fill = guide_coloursteps(show.limits = TRUE, title = 'Percent Change', title.position = 'top'))+
   theme_light()+
   theme(legend.position = 'bottom',
@@ -222,7 +224,7 @@ dall %>% right_join(state) %>%
   pivot_longer(cols = -c(region, region_of_us), names_to = 'method', values_to = 'values') %>%
   filter(method == 'old_scores') %>%
   ggplot(aes(region_of_us, values))+
-  geom_violin(width =1,position = position_dodge(.5), fill = 'lightblue')+
+  geom_violin(width =1,position = position_dodge(.5), fill = 'deepskyblue3')+
   geom_boxplot(width = .1,position = position_dodge(.3))+
   theme_light()+
   scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
@@ -240,18 +242,22 @@ p1 = dall %>% right_join(state) %>%
   geom_split_violin(width =1.7,position = position_dodge(.5),color ='lightgray')+
   geom_boxplot(width = .2, color = 'black',position = position_dodge(.3))+
   theme_light()+
-  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+  scale_fill_manual(values = c("orange","deepskyblue3"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   coord_flip()+
   theme(legend.position = "none")+
   xlab('Region of USA')+
   ylab('SVI Score')+
   ylim(c(0,16))+
-  annotate("text", x=4.3, y=14, label= "Blue: GHI Scores using\nOriginal Weights", size = 3) +
-  annotate("text", x=3.8, y=14, label= "Orange: GHI Scores using\nOptimized Weights", size = 3) +
+  annotate("text", x=4.3, y=14, label= "Blue: GHI Scores using\nOriginal Weights", size = 5) +
+  annotate("text", x=3.8, y=14.3, label= "Orange: GHI Scores using\nOptimized Weights", size = 5) +
   ggtitle('SVI Scores Distributions by Weighting Scheme')+
   scale_x_discrete() +
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        axis.text=element_text(size=12, face = "bold"),
+        axis.title = element_text(size = 14, face = 'bold'))+
   ggsave('figs/SVI/svi_split_scores_violin.png')
+
 p2 = dall %>%
   mutate(where = 'USA') %>%
   select(where, old_scores, new_scores) %>%
@@ -260,9 +266,12 @@ p2 = dall %>%
   geom_split_violin(width =1.7,position = position_dodge(.5),color ='lightgray')+
   geom_boxplot(width = .2, color = 'black',position = position_dodge(.3))+
   theme_light()+
-  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+  scale_fill_manual(values = c("orange","deepskyblue3"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   coord_flip()+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        axis.text=element_text(size=12, face = "bold"),
+        axis.title = element_text(size = 14, face = 'bold'))+
   theme(legend.position = "none")+
   ggtitle('')+
   xlab('')+

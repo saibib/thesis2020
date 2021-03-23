@@ -46,10 +46,12 @@ optim_shap_ghi = shapleySubsetMc(X=ghi,Y=ghi_optim_scores, Ntot = 1500, Ni = 3)
 
 wts_v_optim_wts(ghi,importances,optim_wts)+
   ggtitle('Dimension Weights for GHI')+
+  theme(legend.position = 'bottom')+
   ggsave('figs/GHI/ghi_weights.png')
 
 desired_v_shapley(ghi, importances, orig_shap_ghi$shapley,optim_shap_ghi$shapley)+
   ggtitle('Dimension Importances for GHI')+
+  theme(legend.position = 'bottom')+
   ggsave('figs/GHI/ghi_dim_impt.png')
 
 v1 = names(sort(ghi_scores[ghi_scores>0]))
@@ -164,7 +166,7 @@ ggplot() +
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=change), color = 'black') +
   # scale_fill_binned(breaks = c(-15,-10,-5,0,5,10,15,20),low = 'orange',high = 'blue')+
-  scale_fill_viridis(name = 'Shift',option = 'A',direction = -1,breaks = c(-15,-10,-5,0,5,10,15,20))+
+  scale_fill_viridis(name = 'Shift',option = 'A',direction = -1, begin =.2, end =.8,breaks = c(-15,-10,-5,0,5,10,15,20))+
   guides(fill = guide_coloursteps(show.limits = TRUE, title ='Shift', title.position = 'top'))+
   theme_light()+
   theme(legend.position = 'bottom',
@@ -181,7 +183,7 @@ sf_dat %>%
   geom_map(dat=world_map, map = world_map,
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=category), color = 'black') +
-  scale_fill_viridis(name = 'Category',discrete = TRUE, option = 'A',direction = -1)+
+  scale_fill_viridis(name = 'Category',discrete = TRUE, option = 'A', begin = .2, end = .8, direction = -1)+
   # guides(fill = guide_coloursteps(show.limits = F, title ='Score', title.position = 'top'))+
   theme_light()+
   theme(legend.position = 'bottom')+
@@ -230,7 +232,7 @@ p2 = d2 %>%
   scale_fill_manual(values = c("orange","deepskyblue3"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   xlab('')+
-  ylab('GSMI Score')+
+  ylab('GHI Score')+
   theme(plot.title = element_text(size = 25, face = "bold"),
         axis.text=element_text(size=16, face = "bold"),
         axis.title = element_text(size = 18, face = 'bold'))+
@@ -247,7 +249,7 @@ p1 = d1 %>%
   scale_fill_manual(values = c("orange","deepskyblue3"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   xlab('Continent')+
-  ylab('GSMI Score')+
+  ylab('GHI Score')+
   coord_flip()+
   annotate("text", x=5.15, y=35, label= "Blue: GHI Scores using Original Weights", size = 6) +
   annotate("text", x=4.85, y=34, label= "Orange: GHI Scores using Optimized Weights", size = 6) +

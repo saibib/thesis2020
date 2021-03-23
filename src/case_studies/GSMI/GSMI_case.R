@@ -63,6 +63,7 @@ optim_shap_gsmi = shapleySubsetMc(X=gsmi,Y=gsmi_optim_scores, Ntot = 5000, Ni = 
 
 wts_v_optim_wts(gsmi,gsmi_impt,gsmi_optim_wts)+
   ggtitle('Dimension Weights for GSMI')+
+  theme(legend.position = 'bottom')+
   ggsave('figs/GSMI/gsmi_weights.png')
 
 desired_v_shapley(gsmi, gsmi_impt, orig_shap_gsmi$shapley, optim_shap_gsmi$shapley)+
@@ -174,10 +175,13 @@ ggplot() +
   geom_map(dat=world_map, map = world_map,
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=change), color = 'black') +
-  scale_fill_binned(breaks = c(-4,-2,0,2,4),low = 'orange',high = 'blue')+
-  guides(fill = guide_coloursteps(show.limits = TRUE, title ='Change in Rank', title.position = 'top'))+
+  # scale_fill_binned(breaks = c(-4,-2,0,2,4),low = 'orange',high = 'blue')+
+  scale_fill_viridis(name = 'Shift',option = 'A',direction = -1,breaks = c(-6,-4,-2,0,2,4,6),
+                     begin = .2, end =.8)+
+  guides(fill = guide_coloursteps(show.limits = F, title ='Shift', title.position = 'top'))+
   theme_light()+
-  theme(legend.position="bottom")+
+  theme(legend.position="bottom",
+        legend.key.width = unit(1.3, 'cm'))+
   ggtitle('Map of GSMI Rank Shifts')+
   ggsave('figs/GSMI/gsmi_rank_map.png')
 
@@ -187,7 +191,7 @@ sf_dat %>%
   geom_map(dat=world_map, map = world_map,
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=old_scores), color = 'black') +
-  scale_fill_binned(low = 'orange',high = 'blue')+
+  scale_fill_stepsn(n.breaks = 6, colors = viridis_pal(option = "A", direction = -1,begin = .2, end  = .8)(6))+
   guides(fill = guide_coloursteps(title = 'GSMI Score', show.limits = TRUE,title.position = "top"))+
   theme_light()+
   theme(legend.position="bottom",
@@ -217,11 +221,14 @@ p2 = d2 %>%
   geom_boxplot(width = .1, color = 'black',position = position_dodge(.3))+
   theme_light()+
   theme(legend.position = "none")+
-  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+  scale_fill_manual(values = c("orange","deepskyblue3"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   xlab('')+
   ylab('GSMI Score')+
-  ggtitle(' ')+
+  ggtitle('\n ')+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        axis.text=element_text(size=12, face = "bold"),
+        axis.title = element_text(size = 14, face = 'bold'))+
   coord_flip()
 
 
@@ -231,14 +238,17 @@ p1 = d1 %>%
   geom_boxplot(width = .1, color = 'black',position = position_dodge(.3))+
   theme_light()+
   theme(legend.position = "none")+
-  scale_fill_manual(values = c("orange", "lightblue"),name = "Weights",
+  scale_fill_manual(values = c("orange","deepskyblue3"),name = "Weights",
                     labels = c("Optimized", "Original"))+
   xlab('Continent')+
   ylab('GSMI Score')+
   coord_flip()+
-  annotate("text", x=5.25, y=40, label= "Blue: GSMI Scores\nusing Original Weights", size = 3) +
-  annotate("text", x=4.75, y=40, label= "Orange: GSMI Scores\nusing Optimized Weights", size = 3) +
-  ggtitle('GSMI Scores Distributions by Weighting Scheme')+
+  annotate("text", x=5.25, y=75, label= "Blue: GSMI Scores\nusing Original Weights", size = 4) +
+  annotate("text", x=4.75, y=75, label= "Orange: GSMI Scores\nusing Optimized Weights", size = 4) +
+  ggtitle('GSMI Scores Distributions\nby Weighting Scheme')+
+  theme(plot.title = element_text(size = 20, face = "bold"),
+        axis.text=element_text(size=12, face = "bold"),
+        axis.title = element_text(size = 14, face = 'bold'))+
   ggsave('figs/GSMI/gsmi_scores_violin.png')
 
 png('figs/GSMI/gsmi_violins.png',width = 1200, height = 600  )
@@ -263,34 +273,45 @@ tmp_df = sf_dat %>%
   filter(!continent %in% c('Seven seas (open ocean)') )
 
 p1 = ggplot()+
-  geom_point(data = tmp_df, aes(old_scores, new_scores, shape = continent, color = continent),
-             size = 3, alpha = .6)+
+  geom_point(data = tmp_df, aes(old_scores, new_scores, shape = continent, color = continent, fill = continent),
+             size = 3, alpha = 1)+
   # geom_point(data = tmp2_df,
   #            aes(old_avg, new_avg, shape = continent, color = continent), size = 5)+
   geom_abline(slope=1, intercept = 0,linetype = 'dashed', alpha =.5)+
+  scale_color_viridis(name = 'Continent' , option = 'A', discrete = T, end = .8, begin =.2)+
+  scale_fill_viridis(name = 'Continent', option ='A', discrete = T, end = .8, begin = .2)+
   theme_light()+
   xlab('Original Scores')+
   ylab('Optimized Scores')+
   ggtitle('Optimized vs. Original GHI Scores\n')+
+  theme(plot.title = element_text(size = 24, face = "bold"),
+        axis.text=element_text(size=16,face = "bold"),
+        axis.title = element_text(size = 18, face = "bold"),
+        legend.title = element_text(size = 14),
+        legend.text = element_text(size = 14))+
   theme(legend.position= c(.8,.15))+
-  scale_color_discrete(name = 'Continent')+
-  scale_shape_discrete(name = 'Continent')
+  scale_shape_manual(name = 'Continent', values = c(16, 15,17,21,22,23))
 
 p2 = tmp_df %>%
   mutate(diff = (new_scores - old_scores)/old_scores) %>%
   group_by(continent) %>%
   summarise(mean_diff = mean(diff), mean_old = mean(old_scores))%>%
-  ggplot(aes(mean_old, mean_diff, color =continent, shape = continent))+
+  ggplot(aes(mean_old, mean_diff, color =continent, shape = continent, fill = continent))+
   geom_point(size = 4)+
   geom_hline(yintercept = 0, alpha =.5)+
   geom_hline(yintercept = .05, linetype = 'dashed', alpha =.5)+
   geom_hline(yintercept = -.05, linetype = 'dashed', alpha =.5)+
   xlab('Average Original Score')+
   ylab('Percent Difference')+
+  scale_color_viridis(name = 'Continent' , option = 'A', discrete = T, end = .8, begin =.2, guide = F)+
+  scale_fill_viridis(name = 'Continent', option ='A', discrete = T, end = .8, begin = .2, guide = F)+
   ggtitle('Average Percent Difference Between\nOptimized and Original Scores')+
   theme_light()+
-  scale_color_discrete(guide = F)+
-  scale_shape_discrete(guide = F)
+  theme(plot.title = element_text(size = 24, face = "bold"),
+        axis.text=element_text(size=16,face = "bold"),
+        axis.title = element_text(size = 18, face = "bold"))+
+  scale_shape_manual(guide = F, values = c(16, 15,17,21,22,23))
+
 
 png('figs/GSMI/gsmi_scatter.png',width = 1200, height = 600  )
 grid.arrange(p1,p2,nrow =1 )
