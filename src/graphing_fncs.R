@@ -8,7 +8,7 @@ desired_v_shapley = function(df, desired_impt, shapley_values,optim_shapley){
     xlab('Dimension')+
     ylab('Importance')+
     theme_light()+
-    scale_fill_discrete(name = "Importance",
+    scale_fill_manual(name = "Importance", values = c("deepskyblue3", 'springgreen4',"orange"),
                         labels = c("Desired", "Original\nShapley\nEffect","Optimized\nShapley\nEffect"))
 }
 
@@ -24,7 +24,7 @@ wts_v_optim_wts = function(df, old_weights, optim_wts){
     xlab('Dimension')+
     ylab('Weight')+
     theme_light()+
-    scale_fill_discrete(name = "Weights",
+    scale_fill_manual(name = "Weights", values = c("deepskyblue3", "orange"),
                         labels = c("Original", "Optimized"))
 }
 

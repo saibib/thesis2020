@@ -73,6 +73,8 @@ desired_v_shapley(toi, toi_impt, as.numeric(orig_shap_svi$Shap),
   theme(legend.position = 'bottom')+
   ggsave('figs/SVI/svi_dim_impt.png')# plot the desired importances vs shapley effects
 
+
+SIGN.test(svi_scores,svi_optim_scores)
 ##########
 
 data.frame(counties = rownames(toi), old_scores = svi_scores,
@@ -284,3 +286,23 @@ dev.off()
 #   ggtitle('GHI Scores Distributions by Weighting Scheme')+
 #   scale_x_discrete() +
 #   ggsave('figs/SVI/svi_scores_violin.png')
+
+tmp_df = dall %>%
+  select(country, old_scores, new_scores, continent, change)%>%
+  filter(!continent %in% c('Seven seas (open ocean)') )
+
+dall %>% right_join(state) %>%
+  select(old_scores, new_scores, region_of_us)%>%
+  ggplot()+
+  geom_point(aes(old_scores, new_scores, shape = region_of_us, color = region_of_us),
+             size = 3, alpha = .2)+
+  # geom_point(data = tmp2_df,
+  #            aes(old_avg, new_avg, shape = continent, color = continent), size = 5)+
+  geom_abline(slope=1, intercept = 0,linetype = 'dashed', alpha =.5)+
+  theme_light()+
+  xlab('Original Scores')+
+  ylab('Optimized Scores')+
+  ggtitle('Optimized vs. Original GHI Scores\n')+
+  theme(legend.position= c(.8,.15))+
+  scale_color_discrete(name = 'Continent')+
+  scale_shape_discrete(name = 'Continent')

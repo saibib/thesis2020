@@ -34,7 +34,7 @@ gsmi_scores = agg(gsmi, var_wts = gsmi_impt,agg_method = 'ar') # calculating ind
 
 
 orig_shap_gsmi = shapleySubsetMc(X=gsmi,Y=gsmi_scores, Ntot = 5000, Ni = 3) # est orginal shapley values
-stats::dist(rbind(orig_shap_gsmi$shapley,importances)) #euclidean distance difference in importances and shapley values
+stats::dist(rbind(orig_shap_gsmi$shapley,gsmi_impt)) #euclidean distance difference in importances and shapley values
 
 
 sobolshap_knn(agg, gsmi, method = 'knn', return.shap = T, n.knn=2, randperm = T, n.perm=100, var_wts = gsmi_impt)
