@@ -116,6 +116,21 @@ rankshifts  = data.frame(country = as.factor(v1),  old_scores =gsmi_scores[as.fa
 
 
 # install.packages('reactable')
+rankshifts %>%
+  arrange(old_scores)%>%
+  mutate(country = factor(country, country)) %>%
+  ggplot() +
+  geom_segment( aes(x=country, xend=country, y=old_scores, yend=new_scores), color="grey") +
+  geom_point( aes(x=country, y=old_scores), color='lightblue', size=3 ) +
+  geom_point( aes(x=country, y=new_scores), color='orange', size=3 ) +
+  coord_flip()+
+  ggtitle('Change in GSMI Scores After Applying Optimized Weights')+
+  xlab("Country (in order of original rank)") +
+  ylab("GSMI Score")+
+  annotate("text", y=45, x=80, label= "Blue: GSMI Scores using Original Weights", size =4) +
+  annotate("text", y=46.5, x=78, label= "Orange: GSMI Scores using Optimized Weights", size = 4) +
+  theme_light()+
+  ggsave( width = 9, height = 14, dpi = 300, filename = "figs/GSMI/gsmi_scores_loli.png")
 
 # heat map 82x82
 tbl = reactable(rankshifts, rownames = F, columns = list(
@@ -176,8 +191,9 @@ ggplot() +
            aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
   geom_sf(aes(fill=change), color = 'black') +
   # scale_fill_binned(breaks = c(-4,-2,0,2,4),low = 'orange',high = 'blue')+
-  scale_fill_viridis(name = 'Shift',option = 'A',direction = -1,breaks = c(-6,-4,-2,0,2,4,6),
-                     begin = .2, end =.8)+
+  # scale_fill_viridis(name = 'Shift',option = 'A',direction = -1,breaks = c(-6,-4,-2,0,2,4,6),
+                     # begin = .2, end =.8)+
+  scale_fill_stepsn(n.breaks = 8, colours = rwb(8),name = 'Shift',breaks = c(-6,-4,-2,0,2,4,6))+
   guides(fill = guide_coloursteps(show.limits = F, title ='Shift', title.position = 'top'))+
   theme_light()+
   theme(legend.position="bottom",

@@ -158,8 +158,9 @@ dall %>%
                 color="black", fill=NA, size = .5)+
   # scale_fill_binned(breaks = c(-500,-250,0,250,500,750,1000),low = 'orange',high = 'blue',
   #                   name = 'SVI Score')+
-  scale_fill_viridis(name = 'Shift',option = 'A',direction = -1,breaks = c(-500,-250,0,250,500,750,1000),
-                     begin = .2, end =.8)+
+  # scale_fill_viridis(name = 'Shift',option = 'A',direction = -1,breaks = c(-500,-250,0,250,500,750,1000),
+  #                    begin = .2, end =.8)+
+  scale_fill_stepsn(n.breaks = 8, colours = rwb(8),name = 'Shift',breaks = c(-500,-250,0,250,500,750,1000))+
   guides(fill = guide_coloursteps(show.limits = F,title.position = 'top'))+
   theme_light()+
   theme(legend.position="bottom",
@@ -200,7 +201,8 @@ dall %>%
   geom_polygon(aes(fill=diff)) +
   geom_polygon( data=map_data("state"), aes(x=long, y=lat, group=group),
                 color="black", fill=NA, size = .5)+
-  scale_fill_stepsn(n.breaks = 6, colors = viridis_pal(option = "A", direction = -1,begin = .2, end  = .8)(6))+
+  # scale_fill_stepsn(n.breaks = 6, colors = viridis_pal(option = "A", direction = -1,begin = .2, end  = .8)(6))+
+  scale_fill_stepsn(n.breaks = 6, colours = rwb(6))+
   guides(fill = guide_coloursteps(show.limits = TRUE, title = 'Percent Change', title.position = 'top'))+
   theme_light()+
   theme(legend.position = 'bottom',
@@ -315,3 +317,11 @@ dall %>% right_join(state) %>%
   theme(legend.position= c(.8,.15))+
   scale_color_discrete(name = 'Continent')+
   scale_shape_discrete(name = 'Continent')
+
+reg_tbl = dall %>% right_join(state) %>%
+  select(region, region_of_us) %>%
+  unique()
+reg_tbl$region = reg_tbl$region %>% str_to_title()
+rownames(reg_tbl) = NULL
+library(xtable)
+xtable(reg_tbl)

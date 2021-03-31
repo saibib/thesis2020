@@ -117,6 +117,8 @@ rankshifts %>%
   ggtitle('Change in GHI Scores After Applying Optimized Weights')+
   xlab("Country (in order of original rank)") +
   ylab("GHI Score")+
+  annotate("text", y=28.5, x=115, label= "Blue: GHI Scores using Original Weights", size =4) +
+  annotate("text", y=30, x=113, label= "Orange: GHI Scores using Optimized Weights", size = 4) +
   theme_light()+
   ggsave( width = 9, height = 14, dpi = 300, filename = "figs/GHI/ghi_scores_loli.png")
 
@@ -160,13 +162,25 @@ map_data$admin = map_data$country
 world <- ne_countries(scale = "medium", returnclass = "sf")
 sf_dat <- merge(world, map_data, by.x="admin")
 
+
+coolwarm_hcl <- diverging_hcl(11,h = c(250, 10), c = 100, l = c(37, 88), power = c(0.7, 1.7))
+pal <- function(col, border = "transparent") {
+  n <- length(col)
+  plot(0, 0, type="n", xlim = c(0, 1), ylim = c(0, 1),
+       axes = FALSE, xlab = "", ylab = "")
+  rect(0:(n-1)/n, 0, 1:n/n, 1, col = col, border = border)
+}
+
+pal(coolwarm_hcl)
+rwb <- colorRampPalette(colors = c("red", "white", "blue"))
 sf_dat %>%
 ggplot() +
   geom_map(dat=world_map, map = world_map,
-           aes(map_id=region), fill="lightgray", color="black", alpha = .3)+
+           aes(map_id=region), fill="lightgray", color="black", alpha = .1)+
   geom_sf(aes(fill=change), color = 'black') +
-  # scale_fill_binned(breaks = c(-15,-10,-5,0,5,10,15,20),low = 'orange',high = 'blue')+
-  scale_fill_viridis(name = 'Shift',option = 'A',direction = -1, begin =.2, end =.8,breaks = c(-15,-10,-5,0,5,10,15,20))+
+  # scale_fill_binned(breaks = c(-15,-10,-5,0,5,10,15,20),low = 'red',high = 'blue')+
+  scale_fill_stepsn(n.breaks = 9, colours = rwb(10),name = 'Shift')+
+  # scale_fill_viridis(name = 'Shift',option = 'E',direction = -1, begin =.2, end =.8,breaks = c(-15,-10,-5,0,5,10,15,20))+
   guides(fill = guide_coloursteps(show.limits = TRUE, title ='Shift', title.position = 'top'))+
   theme_light()+
   theme(legend.position = 'bottom',

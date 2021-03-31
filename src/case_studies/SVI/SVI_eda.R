@@ -18,19 +18,23 @@ cor.mtest <- function(mat, ...) {
 }
 p.mat = cor.mtest(voi)
 
-colnames(voi) = c("Below Poverty","Unemployed", "Income", "No High School", "Age 65>", "Age <17",
-"Age 5+ w/ Disability", "Single-Parent", "Minority", "Poor English", "Multiunit Structures",
-"Mobile Homes", "Crowding", "No Vehicle", "Group Quarters")
+colnames(voi) = c("Below\nPoverty","Unemp-\nloyed", "Income", "No High\nSchool", "Age 65>", "Age <17",
+"Age 5+\nw/\nDisability", "Single\nParent", "Minority", "Poor\nEnglish", "Multiunit\nStructures",
+"Mobile\nHomes", "Crowding", "No\nVehicle", "Group\nQuarters")
 
-png(height=800, width=800, filename="figs/SVI/voi_cor.png")
+png(height=1600, width=1600, filename="figs/SVI/voi_cor.png")
 cor(voi, use = 'pairwise') %>%
-  corrplot(method = 'shade', tl.col ='black', tl.cex = 1.5, cl.cex = 1.5)
-
+  corrplot.mixed(lower = "number", upper = "ellipse",
+                 tl.col = "black", tl.cex = 1.5,
+                 cl.cex = 2, number.cex = 1.5)
 dev.off()
+
 colnames(toi) = c("Socioeconomic\nStatus", 'Household\nComposition', 'Minority Status\n& Language', 'Housing Type')
 png(height=800, width=800, filename="figs/SVI/toi_cor.png")
 cor(toi, use = 'pairwise') %>%
-  corrplot(method = 'shade',tl.col = "black", tl.cex = 1.5, cl.cex = 1.5,cl.pos="n")
+  corrplot.mixed(lower = "number", upper = "ellipse",
+                 tl.col = "black", tl.cex = 1.5,
+                 cl.cex = 2, number.cex = 1.5)
 dev.off()
 
 png(height=900, width=1600, file="figs/SVI/combined_cor.png")
