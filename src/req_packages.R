@@ -16,4 +16,4 @@ packages <- c("ggplot2",  "sensitivity", "here", 'stats',
               'sf', 'rnaturalearth', 'rnaturalearthdata', 'ggstance', 'mapdata',
               "gridExtra", 'viridis', 'colorspace')
 ipak(packages)
-x
+

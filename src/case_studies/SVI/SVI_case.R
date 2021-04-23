@@ -160,7 +160,7 @@ dall %>%
   #                   name = 'SVI Score')+
   # scale_fill_viridis(name = 'Shift',option = 'A',direction = -1,breaks = c(-500,-250,0,250,500,750,1000),
   #                    begin = .2, end =.8)+
-  scale_fill_stepsn(n.breaks = 8, colours = rwb(8),name = 'Shift',breaks = c(-500,-250,0,250,500,750,1000))+
+  scale_fill_stepsn(n.breaks = 8, colours = rwb(9)[2:9],name = 'Shift',breaks = c(-500,-250,0,250,500,750,1000))+
   guides(fill = guide_coloursteps(show.limits = F,title.position = 'top'))+
   theme_light()+
   theme(legend.position="bottom",

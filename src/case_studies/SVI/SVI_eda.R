@@ -22,6 +22,8 @@ colnames(voi) = c("Below\nPoverty","Unemp-\nloyed", "Income", "No High\nSchool",
 "Age 5+\nw/\nDisability", "Single\nParent", "Minority", "Poor\nEnglish", "Multiunit\nStructures",
 "Mobile\nHomes", "Crowding", "No\nVehicle", "Group\nQuarters")
 
+
+
 png(height=1600, width=1600, filename="figs/SVI/voi_cor.png")
 cor(voi, use = 'pairwise') %>%
   corrplot.mixed(lower = "number", upper = "ellipse",
@@ -49,16 +51,18 @@ cor(toi, use = 'pairwise') %>%
 title('Dimension Correlations', cex.main = 3)
 dev.off()
 
-
+colnames(voi) = c("Below Poverty","Unemployed", "Income", "No High School", "Age 65>", "Age <17",
+                  "Age 5+ w/ Disability", "Single Parent", "Minority", "Poor English", "Multiunit Structures",
+                  "Mobile Homes", "Crowding", "No Vehicle", "Group Quarters")
 voi %>%
   tidyr::gather() %>%
   ggplot(aes(value)) +
-  geom_histogram()+
+  geom_histogram(bins=40)+
   geom_boxploth(aes(y = -30), width =30, color = "orange", lwd = 1, alpha = .5) +
   facet_wrap(~ key) +
   theme(axis.text.x = element_text(size = 15))+
-  xlab('Value')+
-  ylab('Count')+
+  xlab('Percentile Rank')+
+  ylab('Frequency ')+
   ggtitle('Distribution of SVI Variables')+
   theme_minimal()+
   ggsave('figs/SVI/svi_eda_hist.png')
